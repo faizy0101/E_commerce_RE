@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="shortcut icon" href=" {% static 'favicon.png' %} " />
+    <title>Sign Up &mdash; Property</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href=" {% static 'css/style.css' %} " />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Work Sans", sans-serif;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: linear-gradient(135deg, #0f2027 0%, #203a43 45%, #2c5364 100%);
+      }
+
+      .signup-wrapper {
+        width: 100%;
+        max-width: 460px;
+      }
+
+      .signup-card {
+        background: linear-gradient(160deg, #ffffff 0%, #f4f9ff 100%);
+        border-radius: 20px;
+        padding: 45px 40px;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+        border-top: 6px solid #2f6fed;
+        text-align: center;
+        animation: pop 0.5s ease-out;
+      }
+
+      @keyframes pop {
+        from {
+          opacity: 0;
+          transform: translateY(25px) scale(0.97);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      .signup-logo {
+        font-size: 30px;
+        font-weight: 700;
+        text-decoration: none;
+        display: inline-block;
+        margin-bottom: 6px;
+        background: linear-gradient(90deg, #2f6fed, #00c6ff, #7b2ff7);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+
+      .signup-sub {
+        color: #6c757d;
+        font-size: 14px;
+        margin-bottom: 28px;
+      }
+
+      .signup-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #14213d;
+        margin-bottom: 6px;
+      }
+
+      .signup-form {
+        text-align: left;
+      }
+
+      .form-group {
+        margin-bottom: 18px;
+      }
+
+      .form-group label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+        color: #495057;
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 12px 15px;
+        font-size: 15px;
+        color: #14213d;
+        background: #ffffff;
+        border: 2px solid #e3e8f0;
+        border-radius: 10px;
+        outline: none;
+        transition: 0.25s ease;
+      }
+
+      .form-group input:focus {
+        border-color: #2f6fed;
+        box-shadow: 0 0 0 4px rgba(47, 111, 237, 0.15);
+      }
+
+      .password-wrap {
+        position: relative;
+      }
+
+      .password-wrap input {
+        padding-right: 62px;
+      }
+
+      .toggle-pass {
+        position: absolute;
+        top: 50%;
+        right: 12px;
+        transform: translateY(-50%);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        color: #1463ff;
+        background: none;
+        border: none;
+        cursor: pointer;
+      }
+
+      .btn-signup {
+        width: 100%;
+        padding: 13px;
+        font-size: 16px;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: 0.03em;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        background: linear-gradient(90deg, #f72f2f, #2f6fed 50%, #19c5f4);
+        background-size: 200% 100%;
+        transition: 0.4s ease;
+      }
+
+      .btn-signup:hover {
+        background-position: right center;
+        box-shadow: 0 10px 25px rgb(3 68 198 / 0.4);
+        color: #fff;
+      }
+
+      .login-text {
+        margin-top: 24px;
+        font-size: 14px;
+        color: #6c757d;
+      }
+
+      .login-text a {
+        font-weight: 700;
+        color: #2f6fed;
+        text-decoration: none;
+      }
+
+      .login-text a:hover {
+        color: #7b2ff7;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="signup-wrapper">
+      <div class="signup-card">
+        <a href=" {% url 'index' %} " class="signup-logo">Property</a>
+        <p class="signup-sub">Find your dream home in seconds</p>
+
+        <h1 class="signup-title">Create Account</h1>
+        <p class="signup-sub">Please sign up to continue</p>
+
+        <form method="post" class="signup-form">
+          {% csrf_token %}
+            {{form1}}{{form2}}
+          <button type="submit" class="btn-signup">Sign Up</button>
+        </form>
+
+        <p class="login-text">
+          Already have an account? <a href="#">Log in</a>
+        </p>
+      </div>
+    </div>
+
+    <script>
+      function togglePass(id) {
+        var input = document.getElementById(id);
+        var btn = input.parentElement.querySelector(".toggle-pass");
+        if (input.type === "password") {
+          input.type = "text";
+          btn.textContent = "HIDE";
+        } else {
+          input.type = "password";
+          btn.textContent = "SHOW";
+        }
+      }
+    </script>
+  </body>
+</html>
