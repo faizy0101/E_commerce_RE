@@ -180,12 +180,12 @@
         <a href=" {% url 'index' %} " class="signup-logo">Property</a>
         <p class="signup-sub">Find your dream home in seconds</p>
 
-        <h1 class="signup-title">Create Account</h1>
+        <h1 class="signup-title">Create Customer Account</h1>
         <p class="signup-sub">Please sign up to continue</p>
-
+          {% load crispy_forms_tags %}
         <form method="post" class="signup-form">
           {% csrf_token %}
-            {{form1}}{{form2}}
+            {{form1|crispy}}{{form2|crispy}}
           <button type="submit" class="btn-signup">Sign Up</button>
         </form>
 

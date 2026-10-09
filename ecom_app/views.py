@@ -1,6 +1,8 @@
 from urllib import request
 
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.forms import UserCreationForm
+from django.core.mail import message
 from django.shortcuts import render, redirect
 
 from ecom_app.forms import loginform, sellerform, buyerform
@@ -13,8 +15,31 @@ def index(request):
 def admin_page(request):
     return render(request,'base.html')
 
-def login(request):
-    return render(request,'login.html')
+
+def login_view(request):
+    if request.method=="POST":
+        username=request.POST.get('username')
+        password=request.POST.get('password')
+        user=authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request,user)
+            if user.is_seller:
+                return redirect('seller_page')
+            elif user.is_buyer:
+                return redirect('buyer_page')
+            elif user.is_staff:
+                return redirect('admin_page')
+        else:
+            print('invalid creds...')
+            #message.info(request,'Invalid username or password.')
+    else:
+        return render(request, 'login.html')
+def seller_page(request):
+    return render(request,'seller/seller_base.html')
+def buyer_page(request):
+    return render(request,'buyer/buyer_base.html')
+def admin_page(request):
+    return render(request,'admin/admin_base.html')
 #
 # def user_page(request):
 #     form=UserCreationForm()

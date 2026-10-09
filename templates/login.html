@@ -213,6 +213,7 @@
         <p class="login-sub">Please log in to continue</p>
 
         <form action="#" method="post" class="login-form">
+          {% csrf_token %}
           <div class="form-group">
             <label for="username">Username</label>
             <input

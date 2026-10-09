@@ -1,10 +1,53 @@
-<!DOCTYPE html>
+<!doctype html>
+{% load static %}
+
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Dashboard · 2026 Redesign Preview</title>
+    <script>!function () {
+        try {
+            var t = localStorage.getItem("dash26-theme"), e = window.matchMedia("(prefers-color-scheme: dark)").matches;
+            document.documentElement.setAttribute("data-theme", t || (e ? "dark" : "light"))
+        } catch (t) {
+            document.documentElement.setAttribute("data-theme", "light")
+        }
+    }()</script>
+    <script defer="defer" src=" {% static 'runtime.js' %} "></script>
+    <script defer="defer" src=" {% static 'vendor-fullcalendar.js' %} "></script>
+    <script defer="defer" src=" {% static 'vendor-chartjs.js' %} "></script>
+    <script defer="defer" src=" {% static 'vendors.js' %} "></script>
+    <script defer="defer" src=" {% static '2026.js' %} "></script>
+    <link href=" {% static 'style.css' %} " rel="stylesheet">
 </head>
-<body>
+<body data-active="dashboard" data-crumbs="Workspace | Dashboard">
+<div class="shell">
+    <div data-shell-sidebar></div>
+    <div class="main">
+        <div data-shell-topbar></div>
+        <main class="content">
+            <div class="grid">
+                <section class="col-12 card">
+                    <div class="card-head">
+                        <div class="card-title-wrap"><span class="eyebrow">Geography</span>
+                            <h2 class="card-title">Site visits</h2></div>
+                        <a class="card-action" href="#">View report
+                            <svg viewBox="0 0 24 24">
+                                <path d="M5 12h14M13 5l7 7-7 7"/>
+                            </svg>
+                        </a></div>
 
+                    <h1>welcome, SELLER</h1>
+        {% block content %}
+
+                    {% endblock %}
+                </section>
+
+            </div>
+        </main>
+
+    </div>
+</div>
 </body>
 </html>

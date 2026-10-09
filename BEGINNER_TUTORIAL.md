@@ -31,9 +31,14 @@ E_Commerce_RE/                 <- the project root (C:\Users\Faizy\PycharmProjec
 ├── ecom_app/                  <- the Django "app" package (your actual website code)
 │   ├── __init__.py
 │   ├── apps.py                <- tells Django how to load the app
-│   ├── admin.py               <- register models for the admin site (empty right now)
-│   ├── models.py              <- your database tables (empty right now)
+│   ├── admin.py               <- register models for the admin site (Login, seller, buyer)
+│   ├── apps.py                <- tells Django how to load the app
+│   ├── forms.py               <- ModelForms for login/buyer/seller signup
+│   ├── models.py              <- your database tables (Login, seller, buyer)
 │   ├── views.py               <- what happens when someone visits a page
+│   ├── views_admin.py         <- empty placeholder (reserved for admin views)
+│   ├── views_buyer.py         <- empty placeholder (reserved for buyer views)
+│   ├── views_seller.py        <- empty placeholder (reserved for seller views)
 │   ├── urls.py                <- which URL belongs to which view (inside the app)
 │   ├── tests.py               <- automated tests (empty right now)
 │   └── migrations/            <- saved record of every change to your database
@@ -43,6 +48,9 @@ E_Commerce_RE/                 <- the project root (C:\Users\Faizy\PycharmProjec
 │   ├── base.html              <- the "shell" page the others extend (simple version)
 │   ├── index.html             <- the homepage (a big Bootstrap template)
 │   ├── login.html             <- the login page (self-contained, fancy styling)
+│   ├── user_add.html          <- seller signup form (renders sellerform)
+│   ├── customer_add.html      <- buyer signup form (renders buyerform)
+│   ├── user.html              <- leftover sample template (not wired up)
 │   └── Modified_files/        <- a scratch/backup folder (see note in §4.5)
 │       ├── base.html          <- a much BIGGER base page (not wired up yet)
 │       └── index.html         <- identical copy of templates/index.html
@@ -67,12 +75,13 @@ E_Commerce_RE/                 <- the project root (C:\Users\Faizy\PycharmProjec
 |---|---|
 | Project (the thing `manage.py` talks to) | `ecom` |
 | App (where your code lives) | `ecom_app` |
-| Database | SQLite, file `db.sqlite3` in the project root |
+| Database | **PostgreSQL** (`e_commerce_db` on `127.0.0.1:5432`, user `postgres`) — *not* SQLite anymore |
 | Web framework | Django 6.1.1 |
 | Python | 3.13.15 (`.venv`) |
 | Where HTML lives | `templates/` |
 | Where CSS/JS/images live | `static/` |
 | Where to run commands | in the project root (`E_Commerce_RE`) |
+| Custom user model | `ecom_app.Login` (extends `AbstractUser`) |
 
 ---
 
@@ -80,10 +89,12 @@ E_Commerce_RE/                 <- the project root (C:\Users\Faizy\PycharmProjec
 
 You need:
 1. A working Windows PC (this project was built on Windows 10/11).
-2. Python 3.13.x (a `.venv` with 3.13.15 is already created for you — see §2.1).
-3. Django 6.1.1 (already installed in the `.venv` — see §2.1).
-4. A text editor (PyCharm is recommended — the `.idea/` folder proves it).
-5. A web browser (Edge, Chrome, Firefox — anything modern).
+2. Python 3.13.x (a `.venv` with 3.13.15 is already created for you — see §3.1).
+3. Django 6.1.1 (already installed in the `.venv` — see §3.1).
+4. **PostgreSQL** — the project uses PostgreSQL (not SQLite); install it and create
+   the `e_commerce_db` database (see §4).
+5. A text editor (PyCharm is recommended — the `.idea/` folder proves it).
+6. A web browser (Edge, Chrome, Firefox — anything modern).
 
 If you ever need to install Django yourself on another machine, the command is:
 ```bash
@@ -101,7 +112,7 @@ else on your computer.
 
 The project keeps its virtualenv in `.venv/`. **Never delete this folder.**
 
-### 2.1 Open a terminal in the right place
+### 3.1 Open a terminal in the right place
 
 Every step below uses Windows PowerShell. Open PowerShell, then go to the project
 folder. The project folder is:
@@ -119,7 +130,7 @@ Set-Location "C:\Users\Faizy\PycharmProjects\E_Commerce_RE"
 > **Tip:** From now on, "run this command" means open PowerShell, make sure you are
 > in the folder above, and paste the line.
 
-### 2.2 Activate the virtualenv
+### 3.2 Activate the virtualenv
 
 ```powershell
 . .venv\Scripts\Activate.ps1
@@ -128,7 +139,7 @@ Set-Location "C:\Users\Faizy\PycharmProjects\E_Commerce_RE"
 (After activation, your prompt will change to show `(.venv)` at the start, like:
 `__(.venv)__ PS C:\Users\Faizy\PycharmProjects\E_Commerce_RE>`.)
 
-### 2.3 Verify it works
+### 3.3 Verify it works
 
 ```powershell
 python --version        # should print: Python 3.13.15
@@ -144,13 +155,46 @@ it again.
 
 ---
 
-## 3. Step 2 — Run the database migrations (first-time setup)
+## 3. Step 2 — PostgreSQL database setup
 
-The file `db.sqlite3` exists but is **completely empty** — it has zero tables.
+**Important:** the project now uses **PostgreSQL**, not SQLite. The `db.sqlite3`
+file still exists but is no longer used — the active database is
+`e_commerce_db` running on `127.0.0.1:5432` (user `postgres` / password `1234`).
+
+### 3.1 Install PostgreSQL (if not already installed)
+
+Download the installer from <https://www.enterprisedb.com/downloads/postgres-postgresql-downloads>
+and run it with the default options. **Remember the password you set** — that
+becomes the `postgres` superuser password.
+
+### 3.2 Create the database
+
+From `psql` or pgAdmin, run:
+
+```sql
+CREATE DATABASE e_commerce_db;
+```
+
+Or from PowerShell:
+
+```powershell
+psql -U postgres -c "CREATE DATABASE e_commerce_db;"
+```
+
+### 3.3 Install the Python driver
+
+```powershell
+pip install psycopg2-binary
+```
+
+(The `.venv` may already include it; reinstall if unsure.)
+
+### 3.4 Run the database migrations
+
 Django keeps a record of how the database should look in the `migrations/`
 folder. "Migrating" means "build the tables Django expects".
 
-### 3.1 Check current migration status
+#### 3.4.1 Check current migration status
 
 ```powershell
 python manage.py showmigrations
@@ -163,39 +207,33 @@ admin
  [ ] 0002_logentry_remove_auto_add    (etc.)
 auth
  [ ] 0001_initial
- contenttypes
+contenttypes
  [ ] 0001_initial
- sessions
+sessions
+ [ ] 0001_initial
+ecom_app
  [ ] 0001_initial
 ```
 
-The `[ ]` means "this migration has NOT been applied yet". That is expected
-because the database is empty.
+The `ecom_app` entry is **new** — it reflects the custom `Login`, `seller`, and
+`buyer` models in `models.py`. The `[ ]` means "this migration has NOT been applied yet".
 
-### 3.2 Apply all migrations
+#### 3.4.2 Apply all migrations
 
 ```powershell
 python manage.py migrate
 ```
 
-This command creates the standard Django tables in `db.sqlite3`:
-`auth_user`, `auth_group`, `django_admin_log`, `django_content_type`,
-`django_migrations`, `django_session`, etc.
+This creates the standard Django tables *plus* the project-specific tables
+(`ecom_app_login`, `ecom_app_seller`, `ecom_app_buyer`).
 
-### 3.3 Confirm it worked
+#### 3.4.3 Confirm it worked
 
 ```powershell
 python manage.py showmigrations
 ```
 
-Now the boxes should be `[x]` (applied). Also try:
-
-```powershell
-python manage.py dbshell
-```
-
-Inside the SQLite prompt type `.tables` then `.quit`. You should now see table
-names listed. (If `dbshell` is missing `sqlite3`, that's fine — skip this check.)
+Now the boxes should be `[x]` (applied).
 
 ---
 
@@ -245,6 +283,8 @@ While that terminal window stays open, open a browser and go to:
 - <http://127.0.0.1:8000/> → the **home page** (renders `index.html`)
 - <http://127.0.0.1:8000/base> → the **admin dashboard shell** (renders `base.html`)
 - <http://127.0.0.1:8000/login> → the **login page** (renders `login.html`)
+- <http://127.0.0.1:8000/user_add> → **seller signup** (renders `user_add.html`)
+- <http://127.0.0.1:8000/customer_add> → **buyer signup** (renders `customer_add.html`)
 - <http://127.0.0.1:8000/admin/> → Django's built-in admin panel (log in with the
   superuser you just created)
 
@@ -292,12 +332,15 @@ app's `urls.py` to decide."
 
 ```python
 from django.urls import path
+
 from ecom_app import views
 
-urlpatterns = [
-    path('', views.index, name='index'),       # /         → views.index()
-    path('base', views.admin_page, name='base'),# /base     → views.admin_page()
-    path('login', views.login, name='login'),   # /login    → views.login()
+urlpatterns=[
+    path('',views.index,name='index'),
+    path('base',views.admin_page, name='base'),
+    path('login',views.login,name='login'),
+    path('user_add',views.user_add,name='user_add'),
+    path('customer_add',views.customer_add,name='customer_add'),
 ]
 ```
 
@@ -305,31 +348,134 @@ Each entry: `path('URL-fragment', the-function-that-handles-it, name='short-labe
 
 - The `name=` is **crucial** — templates use `{% url 'login' %}` to build links so
   they won't break if you later move the page.
-- Notice there are **no trailing slashes** on `base` and `login` (`'base'` not
-  `'base/'`). By default Django redirects `/base/` to `/base`. This is fine but
+- Notice there are **no trailing slashes** on `base`, `login`, `user_add`, and
+  `customer_add`. By default Django redirects `/base/` to `/base`. This is fine but
   inconsistent; the home page `'` does end effectively at the root.
 
 ### 6.3 ecom_app/views.py — the "controller"
 
 ```python
-from django.shortcuts import render
+from urllib import request
 
+from django.contrib.auth.forms import UserCreationForm
+from django.shortcuts import render, redirect
+
+from ecom_app.forms import loginform, sellerform, buyerform
+
+
+# Create your views here.
 def index(request):
-    return render(request, 'index.html')      # show the home page
+    return render(request,'index.html')
 
 def admin_page(request):
-    return render(request, 'base.html')       # show the dashboard shell
+    return render(request,'base.html')
 
 def login(request):
-    return render(request, 'login.html')      # show the login form
+    return render(request,'login.html')
+
+def user_add(request):
+    form1=loginform()
+    form2=sellerform()
+    if request.method=="POST":
+        form1=loginform(request.POST)
+        form2=sellerform(request.POST)
+        if form1.is_valid() and form2.is_valid():
+            user_data=form1.save(commit=False)
+            user_data.is_seller=True
+            user_data.save()
+            user1=form2.save(commit=False)
+            user1.user=user_data
+            user1.save()
+            return redirect('login')
+    return render(request,'user_add.html',{'form1':form1,'form2':form2})
+
+def customer_add(request):
+    form1=loginform()
+    form2=buyerform()
+    if request.method=="POST":
+        form1=loginform(request.POST)
+        form2=buyerform(request.POST)
+        if form1.is_valid() and form2.is_valid():
+            user_data=form1.save(commit=False)
+            user_data.is_buyer=True
+            user_data.save()
+            user1=form2.save(commit=False)
+            user1.user=user_data
+            user1.save()
+            return redirect('login')
+    return render(request,'customer_add.html',{'form1':form1,'form2':form2})
 ```
 
 `render(request, 'template.html')` loads the named template from `templates/` and
 returns it to the browser. The `request` object holds everything about the
 visitor's HTTP request (cookies, POST data, user, etc.).
 
+- `index`, `admin_page`, and `login` are simple render functions.
+- `user_add` and `customer_add` are **form-handling** views: they show a blank
+  `loginform` + `sellerform` (or `buyerform`) on `GET`, and on `POST` they validate
+  both forms, set `is_seller=True` (or `is_buyer=True`) on the `Login` user, save
+  both objects, then redirect to the login page.
+- `ecom_app/forms.py` defines three `ModelForm`s (`loginform`, `sellerform`,
+  `buyerform`) tied to the models in §6.5.
+- The view function is named `login`, which shadows `django.contrib.auth.login`.
+  If you later want real authentication you must alias the import (see §14.1).
+
 > ⚠️ **Note for later:** the current `login` view just *shows* the form — it does
-> not actually log anyone in. Fixing this is in §9.
+> not actually log anyone in. Fixing this is in §14.1.
+
+### 6.4 templates/login.html — the visual page
+
+This file is a complete, self-contained HTML page: it declares its own `<head>`,
+inline `<style>`, and inline JavaScript (`togglePass()`). It even has:
+
+```django
+<a href="{% url 'index' %}">Property</a>
+```
+
+which proves `{% url %}` reverse-lookup works (you can jump to the home page from
+the login screen).
+
+### 6.5 ecom_app/models.py — the database tables
+
+The project uses a **custom user model** (`Login`) plus two related profile models:
+
+```python
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+
+class Login(AbstractUser):
+    is_seller=models.BooleanField(default=False)
+    is_buyer=models.BooleanField(default=False)
+
+class buyer(models.Model):
+    user=models.OneToOneField(Login,on_delete=models.CASCADE)
+    name=models.CharField(max_length=100)
+    email=models.EmailField()
+    phone=models.CharField(max_length=100)
+    pincode=models.CharField(max_length=100)
+    address=models.CharField(max_length=100)
+    def __str__(self):
+        return self.name
+
+class seller(models.Model):
+    user=models.OneToOneField(Login,on_delete=models.CASCADE)
+    name=models.CharField(max_length=100)
+    email=models.EmailField()
+    phone=models.CharField(max_length=100)
+    location=models.CharField(max_length=100)
+    tax_number=models.CharField(max_length=100)
+    def __str__(self):
+        return self.name
+```
+
+- `Login` extends `AbstractUser`, adding `is_seller` and `is_buyer` flags so a
+  single account can be either a seller *or* a buyer.
+- `buyer` and `seller` are linked to `Login` via a `OneToOneField` (one user → one
+  profile). Their extra fields store contact/address/tax details.
+- `settings.py` declares `AUTH_USER_MODEL = 'ecom_app.Login'` so Django uses this
+  model everywhere instead of the built-in `User`.
+- These three models are registered in `ecom_app/admin.py` and appear in the Django
+  admin under the same names.
 
 ### 6.4 templates/login.html — the visual page
 
@@ -380,10 +526,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'ecom_app',                        # YOUR app
+    'crispy_forms',                    # renders Bootstrap-friendly forms
+    'crispy_bootstrap5'                # crispy-forms adapter for Bootstrap 5
 ]
 ```
+
 Adding `'ecom_app'` is what makes Django treat `ecom_app/` as part of the site
 (so its `models.py`, `templates/` fallback, `migrations/` are all discovered).
+The two `crispy_*` apps enable `{{ form|crispy }}` rendering in templates.
 
 ### 7.4 Middleware (runs before/after every request)
 
@@ -412,23 +562,41 @@ TEMPLATES = [{
 The `templates/` folder is where `login.html`, `index.html`, and `base.html` live
 — that is why `views.py` can find them by name.
 
-### 7.6 The database
+### 7.6 The database (now PostgreSQL)
 
 ```python
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',    # the file you saw (currently empty)
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "e_commerce_db",
+        "USER": "postgres",
+        "PASSWORD": "1234",
+        "HOST": "127.0.0.1",
+        "PORT": "5432",
     }
 }
 ```
-SQLite stores everything in the single `db.sqlite3` file — no server needed.
+
+PostgreSQL replaced SQLite — make sure PostgreSQL is installed and running, and
+that the `e_commerce_db` database exists (see §3). The `psycopg2-binary` driver
+must be installed in the `.venv` for Django to connect.
+
+### 7.6b Custom user model
+
+```python
+AUTH_USER_MODEL = 'ecom_app.Login'
+```
+
+This tells Django to use the project-defined `Login` model (in
+`models.py` §6.5) as the user model. Changing this *after* the first migration
+is painful — it is already set, so don't change it unless you know what you are
+doing.
 
 ### 7.7 Password rules
 
 Four validators enforce secure passwords for new users (length, not-common, not-
 fully numeric, not too similar to username). That's why `createsuperuser` rejects
-weak passwords in §3.
+weak passwords in §4.
 
 ### 7.8 Internationalization
 
@@ -451,11 +619,17 @@ PyCharm creates when you start a project ("Press Shift+F10 to execute…"). It o
 prints "Hi, PyCharm" when you double-click it in the IDE. **Ignore it.** Django never
 reads it. You can delete it later if you want.
 
-### 7.11 Email (currently broken — see "Known issues" in §13)
+### 7.11 Email (currently broken — see "Known issues" in §14)
 
 ```python
-MAILERS = {...}      # WRONG KEY — should be EMAIL_BACKEND (see §13.2)
+MAILERS = {
+    'default': {
+        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
+    },
+}
 ```
+This uses the key `MAILERS`, which is **not a real Django setting**. The correct
+key is `EMAIL_BACKEND`. See §14.2 for the fix.
 
 ---
 
@@ -466,6 +640,9 @@ MAILERS = {...}      # WRONG KEY — should be EMAIL_BACKEND (see §13.2)
 | `templates/base.html` | 53 lines, ~2 KB | simple shell with `{% block content %}` | **live** (used by `/base`) |
 | `templates/index.html` | 1040 lines, ~42 KB | full Bootstrap "Property" homepage | **live** (used by `/`) |
 | `templates/login.html` | 276 lines, ~6.7 KB | standalone login page | **live** (used by `/login`) |
+| `templates/user_add.html` | — | seller signup page (renders `loginform` + `sellerform`) | **live** (used by `/user_add`) |
+| `templates/customer_add.html` | — | buyer signup page (renders `loginform` + `buyerform`) | **live** (used by `/customer_add`) |
+| `templates/user.html` | — | leftover sample template | **NOT used** |
 | `templates/Modified_files/base.html` | 517 lines, ~30 KB | a fancier dashboard shell | **NOT used** |
 | `templates/Modified_files/index.html` | identical to `templates/index.html` | duplicate backup | **NOT used** |
 
@@ -509,7 +686,12 @@ scratch folder once you no longer need the backup.
   files don't exist in `static/`, so those menu items 404. Fix by changing them
   to `{% url 'index' %}` or removing them.
 
-### 8.4 templates/login.html (self-contained)
+### 8.5 templates/user_add.html & templates/customer_add.html
+
+- Both render two `ModelForm`s side-by-side (`loginform` + `sellerform` or
+  `buyerform`).
+- They use `{% csrf_token %}` inside the `<form>` so POST works.
+- On successful submit the view redirects to `/login` (see §6.3).
 
 - Declares its own `<style>` and JavaScript inline.
 - Contains a "Show/Hide password" toggle (`togglePass()`).
@@ -526,6 +708,8 @@ Visit these URLs while `runserver` is running to see each part in action:
 | <http://127.0.0.1:8000/> | `views.index` | `templates/index.html` |
 | <http://127.0.0.1:8000/base> | `views.admin_page` | `templates/base.html` |
 | <http://127.0.0.1:8000/login> | `views.login` | `templates/login.html` |
+| <http://127.0.0.1:8000/user_add> | `views.user_add` | `templates/user_add.html` |
+| <http://127.0.0.1:8000/customer_add> | `views.customer_add` | `templates/customer_add.html` |
 | <http://127.0.0.1:8000/admin/> | Django's built-in | admin login page |
 
 Open the browser's "View source" and "Inspect element" on each page. You will see
@@ -628,7 +812,7 @@ replace the whole file with:
 ```
 
 For now, **do the standalone version** — it works. The inheritance is an optional
-refactor covered in §13 ("what's broken").
+refactor covered in §14 ("what's broken").
 
 > ⚠️ `base.html` pulls in `style.css`, `2026.js`, etc. If `login.html` extends it,
 > the fancy inline styles in the current `login.html` will be overridden by the
@@ -696,6 +880,11 @@ add `LOGIN_URL = 'login'` and `LOGIN_REDIRECT_URL = 'index'` to
 > The current function is *also* named `login`, which shadows the standard Django
 > `django.contrib.auth.login` function. Rename it before importing — that's why
 > the sketch above aliases the import as `auth_login`.
+>
+> **Contrast with signup:** the `user_add` and `customer_add` views (§6.3) *do*
+> handle `POST` correctly — they validate two forms, save the user with the
+> right flag (`is_seller`/`is_buyer`), link the profile, then redirect. Use them
+> as a reference when you write the real login handler.
 
 ### 14.2 `MAILERS` is the wrong setting name
 
@@ -725,23 +914,26 @@ python -m venv .venv
 . .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
+> Note: you must also install `psycopg2-binary` separately if PostgreSQL support
+> was missing from the freeze output.
 
 ### 14.4 No `.gitignore` at the project root
 
 There is **no** `.gitignore` inside `E_Commerce_RE`. The `.gitignore` that exists
-is at `C:\Users\Faizy` (the parent). Consequence: if you `git init` here later,
-`db.sqlite3`, `.venv/`, and `__pycache__/` could accidentally get committed.
+is at `C:\Users\Faizy` (the parent). Consequence: `db.sqlite3`, `.venv/`, and
+`__pycache__/` could accidentally get committed.
 
 Add a `E_Commerce_RE/.gitignore` containing at minimum:
 ```
 __pycache__/
 *.pyc
 *.pyo
-db.sqlite3
 /staticfiles/
 .DS_Store
 .venv/
 ```
+> Note: `db.sqlite3` is **no longer used** (PostgreSQL is the active database),
+> but the line is harmless and protects the old file if it reappears.
 
 ### 14.5 The git repository lives in the wrong place
 
@@ -792,21 +984,24 @@ delete the rest.
 
 ## 15. The Django admin site (your built-in control panel)
 
-Once you `createsuperuser` (§3) and `migrate` (§2), go to:
+Once you `createsuperuser` (§4) and `migrate` (§3), go to:
 
 <http://127.0.0.1:8000/admin/>
 
-You will see the login form, then the Django admin index (Users, Groups, Sites if
-installed, etc.). This panel reads/writes your models. To make your own models
-appear here, you will eventually add lines to `ecom_app/admin.py`:
+You will see the login form, then the Django admin index. The three models in
+`models.py` are **already registered** in `ecom_app/admin.py`:
 
 ```python
 from django.contrib import admin
-from .models import Product   # your model
-admin.site.register(Product)
+from ecom_app.models import seller, buyer, Login
+
+admin.site.register(Login)
+admin.site.register(seller)
+admin.site.register(buyer)
 ```
 
-But `models.py` is **empty** right now, so the admin shows only Django's defaults.
+So the admin will show **Login**, **seller**, and **buyer** sections where you can
+add/edit/delete records — not just Django's defaults.
 
 ---
 
@@ -834,6 +1029,9 @@ E_Commerce_RE/
 │   ├── base.html          # simple shell
 │   ├── index.html         # home page
 │   ├── login.html         # login page
+│   ├── user_add.html      # seller signup page
+│   ├── customer_add.html  # buyer signup page
+│   ├── user.html          # leftover sample (NOT used)
 │   └── Modified_files/    # backup / prototype versions (not live)
 ├── ecom/                  # the Django "project" package
 │   ├── __init__.py
@@ -843,15 +1041,18 @@ E_Commerce_RE/
 │   └── wsgi.py            # entry for normal (sync) servers
 ├── ecom_app/              # the Django "app" package  (your code lives here)
 │   ├── __init__.py
-│   ├── admin.py           # register models for the admin site
+│   ├── admin.py           # register models (Login, seller, buyer) for admin
 │   ├── apps.py            # app metadata (registers the app)
+│   ├── forms.py           # ModelForms: loginform, sellerform, buyerform
 │   ├── migrations/        # saved database-change history
-│   ├── models.py          # your database tables (currently empty)
+│   ├── models.py          # Login, seller, buyer
 │   ├── tests.py           # automated tests (currently empty)
 │   ├── urls.py            # app-level URL map
-│   └── views.py           # Python functions that build responses
-├── db.sqlite3             # the SQLite database (empty until you migrate)
-├── manage.py              # command-line tool (runserver, migrate, test...)
+│   ├── views.py           # index, admin_page, login, user_add, customer_add
+│   ├── views_admin.py     # empty placeholder
+│   ├── views_buyer.py     # empty placeholder
+│   ├── views_seller.py    # empty placeholder
+│   ├── manage.py is at the project root (runserver, migrate, test...)
 └── main.py                # PyCharm sample script (ignore)
 ```
 
@@ -870,22 +1071,27 @@ Follow these steps verbatim each time you sit down to work:
    ```powershell
    . .venv\Scripts\Activate.ps1
    ```
-4. (Only the first time) build the database:
+4. (Only the first time) make sure PostgreSQL is running and `e_commerce_db`
+   exists (see §3).
+5. (Only the first time) build the database:
    ```powershell
    python manage.py migrate
    ```
-5. (Only the first time) create an admin user:
+6. (Only the first time) create an admin user:
    ```powershell
    python manage.py createsuperuser
    ```
-6. Start the server:
+7. Start the server:
    ```powershell
    python manage.py runserver
    ```
-7. Open a browser to <http://127.0.0.1:8000/>.
+8. Open a browser to <http://127.0.0.1:8000/>.
 
-That's it. Leave step 6 running while you work; the page reloads when you save a
+That's it. Leave step 7 running while you work; the page reloads when you save a
 file.
+
+Then open the browser to <http://127.0.0.1:8000/> and try the checklist in §17
+whenever you start a new terminal session.
 
 ---
 
@@ -895,12 +1101,12 @@ file.
 |---|---|
 | `python` is not recognized | You are not in the virtualenv. Re-run `. .venv\Scripts\Activate.ps1` **in this terminal**. |
 | "No module named django.contrib" | Wrong Python. Activate the `.venv` (step 3 above). |
+| "No module named psycopg2" / "could not connect to server" | PostgreSQL driver missing or server not running. `pip install psycopg2-binary` in the venv, then verify PostgreSQL is running and `e_commerce_db` exists (§3). |
 | Admin page says "database is locked" | A previous `runserver`/`shell` is still open. Close other terminals, then `migrate` again. |
 | Page shows a 404 at `/login` but the code looks right | You removed `runserver`, edited code, but forgot to restart the server. Restart it. |
 | `TemplateDoesNotExist at /` for some file | The template name in `views.py` doesn't match a file in `templates/`. Check spelling and case (Linux/Mac is case-sensitive; Windows is not). |
 | Form POST does nothing | There is no `{% csrf_token %}` in the `<form>`, or the view ignores `request.method == 'POST'`. |
 | Static CSS missing (page is unstyled) | Either (a) dev server not running, (b) `STATIC_URL` mismatch, (c) the file isn't in `static/`. With `DEBUG = True` and `runserver`, Django serves `/static/` automatically. |
-| "Cannot load such file or directory: sqlite3" (in dbshell) | SQLite's CLI isn't installed. Run `python manage.py migrate` (uses the pure-Python sqlite3 module, which is always present) instead of `dbshell`. |
 | "fatal: your current branch 'master' does not have any commits yet" | Normal for a brand-new repo with no commits. Nothing to fix unless you intend to commit (see §14.5). |
 | Login form still won't log you in after edits | You replaced `views.login` but the URL still points to the old function, *or* the function name `login` shadows `django.contrib.auth.login`. Rename and re-save, then restart `runserver`. |
 
@@ -908,17 +1114,22 @@ file.
 
 ## 19. Where to go next (beyond this tutorial)
 
-1. Make the `/login` page actually authenticate (§14.1).
-2. Add a `Product` (or `Item`) model to `models.py`, then `makemigrations` →
-   `migrate` → register it in `admin.py` → add some entries in the admin UI.
+1. Make the `/login` page actually authenticate (§14.1) — use the working `user_add`
+   / `customer_add` views as a POST-handling reference.
+2. The `Login`, `seller`, and `buyer` models are already defined, migrated, and
+   registered in admin (§6.5, §15). Add a `Product` model next, then
+   `makemigrations` → `migrate` → register it in `admin.py`.
 3. Create a listing page that reads products with `Product.objects.all()` and
    loops over them in a template with `{% for %}`.
 4. Add `{% url %}` links and `{% block %}` inheritance so `login.html` and
    `about.html` extend `base.html`.
 5. Add `LOGIN_URL` / `LOGIN_REDIRECT_URL` settings and protect pages with
    `@login_required`.
-6. Add a `requirements.txt` and a proper `.gitignore` (§13.3, §13.4).
-7. When ready, switch `DEBUG = False`, set `ALLOWED_HOSTS`, and serve with a real
+6. Add a `requirements.txt` and a proper `.gitignore` (§14.3, §14.4).
+7. Refactor `user_add` / `customer_add` into `views_seller.py` / `views_buyer.py`
+   (the empty placeholder files exist for this purpose) and wire them through
+   `ecom_app/urls.py`.
+8. When ready, switch `DEBUG = False`, set `ALLOWED_HOSTS`, and serve with a real
    WSGI server (Gunicorn) behind a reverse proxy — but that is a separate topic.
 
 ---

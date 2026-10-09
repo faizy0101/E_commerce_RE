@@ -6,6 +6,7 @@ class Login(AbstractUser):
     is_seller=models.BooleanField(default=False)
     is_buyer=models.BooleanField(default=False)
 
+
 class buyer(models.Model):
     user=models.OneToOneField(Login,on_delete=models.CASCADE)
     name=models.CharField(max_length=100)

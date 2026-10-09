@@ -14,7 +14,6 @@ class loginform(UserCreationForm):
     class Meta:
         model = Login
         fields= ('username','password1','password2')
-
 class buyerform(forms.ModelForm):
     class Meta:
         model=buyer
@@ -27,3 +26,4 @@ class sellerform(forms.ModelForm):
         model=seller
         fields= '__all__'
         exclude=("user",)
+
