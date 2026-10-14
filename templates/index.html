@@ -66,7 +66,13 @@
               </li>
               <li><a href=" {% static 'services.html' %} ">Services</a></li>
               <li><a href=" {% static 'about.html' %} ">About</a></li>
-              <li><a href=" {% static 'contact.html' %} ">Contact Us</a></li>
+              <li class="has-children">
+                <a href=" {% static 'properties.html' %} ">Login/SignUp</a>
+                <ul class="dropdown">
+                  <li><a href="{% url 'login' %}">Login</a></li>
+                  <li><a href="{% url 'customer_add' %}">SignUp</a></li>
+                </ul>
+              </li>
             </ul>
 
             <a
@@ -963,7 +969,7 @@
               <ul class="list-unstyled links">
                 <li><a href="#">Our Vision</a></li>
                 <li><a href="#">About us</a></li>
-                <li><a href="#">Contact us</a></li>
+                <li><a href="{% url 'login' %}">Login</a></li>
               </ul>
 
               <ul class="list-unstyled social">

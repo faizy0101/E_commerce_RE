@@ -1,0 +1,10 @@
+{% extends 'seller/seller_base.html' %}
+{% block content %}
+
+<body>
+<label> Profile : {{seller_user}}</label>
+{{form}}
+<a class="btn btn-warning" href="{% url '' seller_user.id %}" type="button">Save</a>
+
+</body>
+{% endblock %}

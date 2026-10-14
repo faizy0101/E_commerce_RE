@@ -1,1161 +1,920 @@
-# Beginner Tutorial — `E_Commerce_RE` (Django 6.1 Project)
+# Beginner Tutorial — `E_Commerce_RE`
 
-This guide is written for someone who has **never run a Django project before**.
-It does **read-only exploration first**, explains every file you need to
-understand, and then walks you through bringing the project to life **one careful
-step at a time**.
-
-Everything below is based on the *actual* state of this project as it exists on
-disk right now. Nothing is guessed. If something here differs from your screen,
-that means the project was changed since this file was written.
+A step-by-step guide written **like a teacher talking to you**.  
+Read a section, do exactly what it says, then move to the next.  
+By the end you will have a working Django e-commerce site — and you will understand **why**.
 
 ---
 
-## 0. The "what is this?" map (30-second version)
+## Before you begin
 
-```
-E_Commerce_RE/                 <- the project root (C:\Users\Faizy\PycharmProjects\E_Commerce_RE)
-│
-├── .venv/                     <- Python virtual environment (Python 3.13.15)
-├── manage.py                  <- Django's command-line tool (the "do everything" script)
-├── main.py                    <- a leftover PyCharm sample script (NOT used by the web app)
-├── db.sqlite3                 <- the database file (currently EMPTY — 0 tables)
-│
-├── ecom/                      <- the Django "project" package
-│   ├── __init__.py
-│   ├── asgi.py                <- for WebSockets/ASGI servers
-│   ├── wsgi.py                <- for normal web servers (Apache/Nginx/Gunicorn)
-│   ├── settings.py            <- ALL global config (installed apps, DB, static files…)
-│   └── urls.py                <- the "master" list of URLs
-│
-├── ecom_app/                  <- the Django "app" package (your actual website code)
-│   ├── __init__.py
-│   ├── apps.py                <- tells Django how to load the app
-│   ├── admin.py               <- register models for the admin site (Login, seller, buyer)
-│   ├── apps.py                <- tells Django how to load the app
-│   ├── forms.py               <- ModelForms for login/buyer/seller signup
-│   ├── models.py              <- your database tables (Login, seller, buyer)
-│   ├── views.py               <- what happens when someone visits a page
-│   ├── views_admin.py         <- empty placeholder (reserved for admin views)
-│   ├── views_buyer.py         <- empty placeholder (reserved for buyer views)
-│   ├── views_seller.py        <- empty placeholder (reserved for seller views)
-│   ├── urls.py                <- which URL belongs to which view (inside the app)
-│   ├── tests.py               <- automated tests (empty right now)
-│   └── migrations/            <- saved record of every change to your database
-│       └── __init__.py
-│
-├── templates/                 <- HTML files live here (top-level, shared by the app)
-│   ├── base.html              <- the "shell" page the others extend (simple version)
-│   ├── index.html             <- the homepage (a big Bootstrap template)
-│   ├── login.html             <- the login page (self-contained, fancy styling)
-│   ├── user_add.html          <- seller signup form (renders sellerform)
-│   ├── customer_add.html      <- buyer signup form (renders buyerform)
-│   ├── user.html              <- leftover sample template (not wired up)
-│   └── Modified_files/        <- a scratch/backup folder (see note in §4.5)
-│       ├── base.html          <- a much BIGGER base page (not wired up yet)
-│       └── index.html         <- identical copy of templates/index.html
-│
-└── static/                    <- CSS, JavaScript, images, fonts (everything the browser downloads)
-    ├── css/
-    ├── fonts/
-    ├── images/
-    ├── js/
-    ├── scss/
-    ├── 2026.js               <- powers the big base page in Modified_files/
-    ├── runtime.js
-    ├── vendors.js
-    ├── style.css             <- global CSS (used by index.html and base.html)
-    ├── vendor-chartjs.js
-    └── vendor-fullcalendar.js
-```
+You should know **very little** about Django. If a word is unfamiliar, the tutorial
+explains it. Open a **PowerShell** window and keep it open for every step.
 
-**Key facts you must remember:**
-
-| Question | Answer |
-|---|---|
-| Project (the thing `manage.py` talks to) | `ecom` |
-| App (where your code lives) | `ecom_app` |
-| Database | **PostgreSQL** (`e_commerce_db` on `127.0.0.1:5432`, user `postgres`) — *not* SQLite anymore |
-| Web framework | Django 6.1.1 |
-| Python | 3.13.15 (`.venv`) |
-| Where HTML lives | `templates/` |
-| Where CSS/JS/images live | `static/` |
-| Where to run commands | in the project root (`E_Commerce_RE`) |
-| Custom user model | `ecom_app.Login` (extends `AbstractUser`) |
-
----
-
-## 1. Before you start — Prerequisites
-
-You need:
-1. A working Windows PC (this project was built on Windows 10/11).
-2. Python 3.13.x (a `.venv` with 3.13.15 is already created for you — see §3.1).
-3. Django 6.1.1 (already installed in the `.venv` — see §3.1).
-4. **PostgreSQL** — the project uses PostgreSQL (not SQLite); install it and create
-   the `e_commerce_db` database (see §4).
-5. A text editor (PyCharm is recommended — the `.idea/` folder proves it).
-6. A web browser (Edge, Chrome, Firefox — anything modern).
-
-If you ever need to install Django yourself on another machine, the command is:
-```bash
-pip install django
-```
-But **do not do that here** — the virtualenv already has it.
-
----
-
-## 2. Step 1 — Activate the virtualenv
-
-A *virtual environment* is a folder that holds its own copy of Python plus a list
-of installed packages, so your project's dependencies don't clash with anything
-else on your computer.
-
-The project keeps its virtualenv in `.venv/`. **Never delete this folder.**
-
-### 3.1 Open a terminal in the right place
-
-Every step below uses Windows PowerShell. Open PowerShell, then go to the project
-folder. The project folder is:
+The project lives at:
 
 ```
 C:\Users\Faizy\PycharmProjects\E_Commerce_RE
 ```
 
-You can navigate there with:
+All commands below are run **from that folder** (unless told otherwise).
 
-```powershell
-Set-Location "C:\Users\Faizy\PycharmProjects\E_Commerce_RE"
-```
+---
 
-> **Tip:** From now on, "run this command" means open PowerShell, make sure you are
-> in the folder above, and paste the line.
+## Task 1 — Turn on the project
 
-### 3.2 Activate the virtualenv
+> Goal: see a blank Django page in your browser.
+
+### 1.1 Activate your Python environment
+
+A *virtual environment* is like a box that holds its own Python + packages, so they
+don't clash with other projects. This project's box is called `.venv`.
 
 ```powershell
 . .venv\Scripts\Activate.ps1
 ```
 
-(After activation, your prompt will change to show `(.venv)` at the start, like:
-`__(.venv)__ PS C:\Users\Faizy\PycharmProjects\E_Commerce_RE>`.)
+You will know it worked when the prompt changes to:
 
-### 3.3 Verify it works
+```
+(.venv) PS C:\Users\Faizy\PycharmProjects\E_Commerce_RE>
+```
+
+### 1.2 Check you have the right tools
 
 ```powershell
-python --version        # should print: Python 3.13.15
-python -m django version # should print: 6.1.1
+python --version         # Python 3.13.15
+python -m django version # 6.1.1
 ```
 
-If you see numbers close to these, you are good. If you get "command not found"
-or a different Django version, you forgot Step 1 (the `Activate` command) — run
-it again.
+### 1.3 Make sure PostgreSQL is running
 
-> **Important:** Each new terminal window starts fresh. If you open a new
-> PowerShell, you must re-run `. .venv\Scripts\Activate.ps1` every time.
+This project talks to **PostgreSQL**, not the tiny `db.sqlite3` file sitting in
+the folder. PostgreSQL must be **installed and running** with a database called
+`e_commerce_db`.
 
----
-
-## 3. Step 2 — PostgreSQL database setup
-
-**Important:** the project now uses **PostgreSQL**, not SQLite. The `db.sqlite3`
-file still exists but is no longer used — the active database is
-`e_commerce_db` running on `127.0.0.1:5432` (user `postgres` / password `1234`).
-
-### 3.1 Install PostgreSQL (if not already installed)
-
-Download the installer from <https://www.enterprisedb.com/downloads/postgres-postgresql-downloads>
-and run it with the default options. **Remember the password you set** — that
-becomes the `postgres` superuser password.
-
-### 3.2 Create the database
-
-From `psql` or pgAdmin, run:
-
-```sql
-CREATE DATABASE e_commerce_db;
+Check:
+```powershell
+psql -U postgres -c "SELECT 1;"
 ```
+If it asks for a password, enter `1234` (that is what `settings.py` expects).
 
-Or from PowerShell:
-
+If the database doesn't exist yet:
 ```powershell
 psql -U postgres -c "CREATE DATABASE e_commerce_db;"
 ```
 
-### 3.3 Install the Python driver
+### 1.4 Run the database migrations
 
-```powershell
-pip install psycopg2-binary
-```
-
-(The `.venv` may already include it; reinstall if unsure.)
-
-### 3.4 Run the database migrations
-
-Django keeps a record of how the database should look in the `migrations/`
-folder. "Migrating" means "build the tables Django expects".
-
-#### 3.4.1 Check current migration status
+"Migrations" are Django's way of turning your `models.py` (which describes tables in
+Python) into **real tables** in PostgreSQL.
 
 ```powershell
 python manage.py showmigrations
 ```
 
-You will see output like:
-```
-admin
- [ ] 0001_initial
- [ ] 0002_logentry_remove_auto_add    (etc.)
-auth
- [ ] 0001_initial
-contenttypes
- [ ] 0001_initial
-sessions
- [ ] 0001_initial
-ecom_app
- [ ] 0001_initial
-```
+You will see `[ ]` on many lines — "not applied yet".
 
-The `ecom_app` entry is **new** — it reflects the custom `Login`, `seller`, and
-`buyer` models in `models.py`. The `[ ]` means "this migration has NOT been applied yet".
-
-#### 3.4.2 Apply all migrations
-
+Apply them:
 ```powershell
 python manage.py migrate
 ```
 
-This creates the standard Django tables *plus* the project-specific tables
-(`ecom_app_login`, `ecom_app_seller`, `ecom_app_buyer`).
+Run `showmigrations` again — now the boxes are `[x]`.
 
-#### 3.4.3 Confirm it worked
-
-```powershell
-python manage.py showmigrations
-```
-
-Now the boxes should be `[x]` (applied).
-
----
-
-## 4. Step 3 — Create an admin user (so you can log in to /admin)
-
-Django ships with a ready-made login-protected **admin area**. To use it you need
-a "superuser" (an account with full permissions).
-
-```powershell
-python manage.py createsuperuser
-```
-
-The prompts are:
-1. **Username** — pick `admin` (or your name).
-2. **Email address** — any valid email, e.g. `admin@example.com`.
-3. **Password** — must be 8+ characters and **not** a common password (Django
-   enforces this; "password123" is rejected — use something like `MyP@ssw0rd!`).
-4. **Password (again)** — confirm.
-
-> If you ever forget this password, run `python manage.py changepassword admin`.
-
----
-
-## 5. Step 4 — Start the website on your computer
-
-Django includes a tiny built-in web server for development. Never use it in
-production — it is for your laptop only.
+### 1.5 Start the web server
 
 ```powershell
 python manage.py runserver
 ```
 
-You will see something like:
-```
-Watching for file changes...
-Performing system checks...
+Leave that window running. In your browser go to:
 
-System check identified no issues (0 silenced).
-October 05, 2026 - 03:15:00
-Django version 6.1.1, using settings 'ecom.settings'
-Starting development server at http://127.0.0.1:8000/
-Quit the server with CONTROL + C.
-```
+- <http://127.0.0.1:8000/> — you should see the **home page**.
 
-While that terminal window stays open, open a browser and go to:
+Press `Ctrl + C` in the terminal to stop the server when you are done.
 
-- <http://127.0.0.1:8000/> → the **home page** (renders `index.html`)
-- <http://127.0.0.1:8000/base> → the **admin dashboard shell** (renders `base.html`)
-- <http://127.0.0.1:8000/login> → the **login page** (renders `login.html`)
-- <http://127.0.0.1:8000/user_add> → **seller signup** (renders `user_add.html`)
-- <http://127.0.0.1:8000/customer_add> → **buyer signup** (renders `customer_add.html`)
-- <http://127.0.0.1:8000/admin/> → Django's built-in admin panel (log in with the
-  superuser you just created)
-
-> Leave `runserver` running. To stop it, press `Ctrl + C` in that terminal, then
-> type `y` when asked to terminate the job.
+> 💡 From now on, whenever you want to work, open **two** windows: one for
+> `runserver`, one for typing commands. Always activate `.venv` first.
 
 ---
 
-## 6. How does a web page actually get built? (Django's MVT explained, slowly)
+## Task 2 — Create an admin account
 
-When a visitor opens a URL, a *chain of four* files decides what they see:
+> Goal: log in to Django's built-in admin panel.
 
-```
-Browser request
-      │
-      ▼
-ecom/urls.py        ← "master list" — says e.g. path('', include('ecom_app.urls'))
-      │
-      ▼
-ecom_app/urls.py    ← "app list"  — says e.g. path('login', views.login)
-      │
-      ▼
-ecom_app/views.py   ← runs a Python function, builds data, picks an HTML file
-      │
-      ▼
-templates/login.html ← the HTML template that becomes the page
+```powershell
+python manage.py createsuperuser
 ```
 
-### 6.1 ecom/urls.py — the project-level "master map"
+Fill in:
+- **Username** → `admin`
+- **Email** → anything (e.g. `admin@example.com`)
+- **Password** → something strong like `MyP@ssw0rd!` (Django will reject
+  `password123`)
+- **Password (again)** → same thing.
+
+You can now log in at <http://127.0.0.1:8000/admin/> with `admin` / your password.
+
+---
+
+## Task 3 — Understand the project layout (read-only, 5 minutes)
+
+Before you touch any code, here is the map. Everything has a place and a reason.
+
+```
+E_Commerce_RE/
+├── .venv/              ← your Python box (do not edit)
+├── manage.py           ← the "do everything" script  (python manage.py ______)
+├── main.py             ← a leftover PyCharm file — IGNORE it
+│
+├── ecom/               ← the Django "project"  (settings, urls, wsgi)
+│   └── settings.py     ← ALL your config lives here
+│   └── urls.py         ← the master list of URLs
+│
+├── ecom_app/           ← the Django "app"  (your website code)
+│   └── models.py       ← database tables (Python classes)
+│   └── forms.py        ← forms that render HTML input fields
+│   └── views.py        ← main pages (index, login, signup, dashboards)
+│   └── views_admin.py  ← admin-side pages (manage buyers, CRUD)
+│   └── views_buyer.py  ← buyer-side pages (profile view)
+│   └── views_seller.py ← seller-side pages (profile view + edit)
+│   └── urls.py         ← this app's URL list
+│   └── admin.py        ← which models show up in /admin
+│   └── migrations/     ← saved history of your database changes
+│
+├── templates/          ← all your HTML files
+│   ├── index.html          ← the home page (property-listing theme)
+│   ├── login.html          ← the login page (styled, standalone)
+│   ├── user_add.html       ← seller signup page
+│   ├── customer_add.html   ← buyer signup page
+│   ├── user.html           ← leftover unused template — IGNORE it
+│   ├── base.html           ← leftover dashboard shell (only /base renders it)
+│   ├── seller/             ← seller dashboard templates
+│   │   └── seller_base.html            ← Spark Admin dashboard shell
+│   │   └── profile_view_seller.html    ← shows seller profile + Update link
+│   │   └── update_seller_profile.html  ← edit seller profile form
+│   ├── buyer/              ← buyer dashboard templates
+│   │   └── buyer_base.html            ← Spark Admin dashboard shell
+│   │   └── profile_view_buyer.html    ← shows buyer profile
+│   └── admin/              ← admin dashboard templates
+│       └── admin_base.html   ← Spark Admin dashboard shell
+│       └── customers.html    ← buyer CRUD table
+│       └── update.html       ← update buyer form
+│       └── delete.html       ← (placeholder, unused)
+│
+└── static/             ← CSS, JS, images, fonts
+    ├── css/            ← old stylesheets (login/index/signup still use css/style.css)
+    ├── js/             ← old JS (bootstrap, slider, aos, etc.)
+    ├── fonts/          ← icomoon / flaticon icon fonts
+    ├── images/         ← property photos, hero banners
+    ├── assets/         ← Spark Admin theme (dashboard CSS/JS/images)
+    │   ├── css/main.css
+    │   ├── js/dashboard.js
+    │   ├── libs/       ← bootstrap, apexcharts, flatpickr, etc.
+    │   └── images/     ← avatar, favicon.ico, etc.
+    └── favicon.png     ← site icon (may be missing — see §10.8)
+```
+
+**Two names to remember:**
+- `ecom` = the **project** (settings, master URLs)
+- `ecom_app` = the **app** (models, forms, views, app URLs)
+
+---
+
+## Task 4 — Build the signup flow (models → forms → views → urls → templates)
+
+> Goal: a visitor can **sign up** as a seller or buyer, then **log in**, and get
+> redirected to their own dashboard.
+
+This is the most important task. It touches every part of Django.  
+We go **bottom-up**: database → form → view → URL → template.
+
+### 4.1 The database tables (`models.py`)
+
+Open `ecom_app/models.py`. You will see three classes:
 
 ```python
-from django.contrib import admin
-from django.urls import path, include          # include() lets you merge in another file's URLs
+class Login(AbstractUser):           # the user account (username + password)
+    is_seller = models.BooleanField(default=False)
+    is_buyer  = models.BooleanField(default=False)
 
-urlpatterns = [
-    path('admin/', admin.site.urls),            # /admin/ → Django's built-in admin area
-    path('', include('ecom_app.urls')),         # everything else → handed to ecom_app
-]
+class seller(models.Model):          # extra info for a seller
+    user = models.OneToOneField(Login, on_delete=models.CASCADE)
+    name = ...
+    email = ...
+    phone = ...
+    location = ...
+    tax_number = ...
+
+class buyer(models.Model):           # extra info for a buyer
+    user = models.OneToOneField(Login, on_delete=models.CASCADE)
+    name = ...
+    email = ...
+    phone = ...
+    pincode = ...
+    address = ...
 ```
 
-`path('', include(...))` means "for the root URL and anything below it, ask the
-app's `urls.py` to decide."
+**What this means:**
+- `Login` is the **user model** — it extends Django's `AbstractUser` (gives you
+  username + password for free) and adds two yes/no flags (`is_seller`, `is_buyer`).
+- `seller` and `buyer` are **profile** tables — each stores one extra record per
+  user, linked by `OneToOneField` (one user → one seller profile, one user → one buyer profile).
+- `settings.py` says `AUTH_USER_MODEL = 'ecom_app.Login'`, so Django uses this
+  `Login` class everywhere instead of the default `User`.
 
-### 6.2 ecom_app/urls.py — the app's "menu of pages"
+> ✅ You do **not** need to change the models. They are already correct.
+
+### 4.2 The forms (`forms.py`)
+
+Open `ecom_app/forms.py`:
+
+```python
+class loginform(UserCreationForm):     # signup form (username + 2 password fields)
+    class Meta:
+        model = Login
+        fields = ('username', 'password1', 'password2')
+
+class sellerform(forms.ModelForm):     # seller profile form
+    class Meta:
+        model = seller
+        fields = '__all__'
+        exclude = ("user",)           # the view sets this manually
+
+class buyerform(forms.ModelForm):       # buyer profile form
+    class Meta:
+        model = buyer
+        fields = '__all__'
+        exclude = ("user",)           # the view sets this manually
+```
+
+**What this means:**
+- `loginform` uses `UserCreationForm` — Django auto-creates the two password
+  fields and **hashes** the password when saving. It is tied to the custom `Login`
+  model (not the default `User`).
+- `sellerform` / `buyerform` are `ModelForm`s — Django reads your `seller` / `buyer`
+  model and builds a form field for each database column.
+- `exclude = ("user",)` tells Django: "don't show the `user` field on the form —
+  the view will link it to the right user behind the scenes."
+
+> ✅ You do **not** need to change the forms. They are already correct.
+
+### 4.3 The views (`views.py`)
+
+Open `ecom_app/views.py` and look at these key functions:
+
+#### `login_view` — logs a user in
+
+```python
+def login_view(request):
+    if request.method == "POST":           # the user clicked "Log In"
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+        if user is not None:               # password matched!
+            login(request, user)
+            if user.is_seller:
+                return redirect('seller_page')
+            elif user.is_buyer:
+                return redirect('buyer_page')
+            elif user.is_staff:
+                return redirect('admin_page')
+        else:
+            print('invalid creds...')      # wrong password — see the bug note below
+    else:                                  # the user just opened the page
+        return render(request, 'login.html')
+```
+
+This is the **real** auth flow. It:
+1. Reads `username` and `password` from the submitted form.
+2. Calls `authenticate()` — Django checks the password hash.
+3. Calls `login()` — Django stores the user ID in a session cookie.
+4. **Redirects** to the right dashboard based on `is_seller` / `is_buyer` / `is_staff`.
+
+> ⚠️ **Bug to fix later:** when the password is wrong, the function prints a message
+> but returns nothing → Django throws a 500 error. The fix is to `return render(...)`
+> or `return redirect('login')` after the `print`. (See §10.1.)
+
+#### `user_add` — signs up a seller
+
+```python
+def user_add(request):
+    form1 = loginform()      # the loginform (username + passwords)
+    form2 = sellerform()     # the sellerform (name, email, phone, etc.)
+    if request.method == "POST":
+        form1 = loginform(request.POST)
+        form2 = sellerform(request.POST)
+        if form1.is_valid() and form2.is_valid():
+            user_data = form1.save(commit=False)  # don't save yet
+            user_data.is_seller = True             # mark this user as a seller
+            user_data.save()                       # NOW save to the database
+            user1 = form2.save(commit=False)       # don't save yet
+            user1.user = user_data                 # link seller profile to the user
+            user1.save()                           # NOW save to the database
+            return redirect('login')              # go to the login page
+    return render(request, 'user_add.html', {'form1': form1, 'form2': form2})
+```
+
+**The pattern:**
+1. Create **two** forms — one for the user account, one for the profile.
+2. On `POST`, fill both from `request.POST` (the submitted data).
+3. If both are valid: save the user first, set the flag (`is_seller`), then link
+   the profile and save it.
+4. Redirect to login.
+
+#### `customer_add` — signs up a buyer
+
+This is **identical** to `user_add`, except:
+- It uses `buyerform` instead of `sellerform`.
+- It sets `user_data.is_buyer = True`.
+
+#### `seller_page`, `buyer_page`, `admin_page`
+
+These are the dashboards shown **after login**:
+
+```python
+def seller_page(request):
+    return render(request, 'seller/seller_base.html')
+
+def buyer_page(request):
+    return render(request, 'buyer/buyer_base.html')
+
+def admin_page(request):
+    return render(request, 'admin/admin_base.html')
+```
+
+> ⚠️ There are **two** `admin_page` functions in the file. The second one (the
+> one that renders `admin/admin_base.html`) wins. The first one (renders `base.html`)
+> is dead code. Rename the first one later (see §10.2).
+
+### 4.4 The URLs (`urls.py`)
+
+Every page needs a **URL**. Open `ecom_app/urls.py`:
 
 ```python
 from django.urls import path
+from ecom_app import views, views_admin, views_buyer, views_seller
 
-from ecom_app import views
+urlpatterns = [
+    path('', views.index, name='index'),              # /         → home
+    path('base', views.admin_page, name='base'),      # /base     → Spark Admin dashboard shell
+    path('login', views.login_view, name='login'),    # /login    → login
+    path('user_add', views.user_add, name='user_add'),# /user_add → seller signup
+    path('customer_add', views.customer_add, name='customer_add'), # buyer signup
+    path('seller_page', views.seller_page, name='seller_page'),
+    path('buyer_page', views.buyer_page, name='buyer_page'),
+    path('admin_page', views.admin_page, name='admin_page'),
 
-urlpatterns=[
-    path('',views.index,name='index'),
-    path('base',views.admin_page, name='base'),
-    path('login',views.login,name='login'),
-    path('user_add',views.user_add,name='user_add'),
-    path('customer_add',views.customer_add,name='customer_add'),
+    # admin-side routes
+    path('view_customers', views_admin.view_customers, name='view_customers'),
+    path('update_customers/<int:id>', views_admin.update_customers, name='update_customers'),
+    path('delete_customers/<int:id>', views_admin.delete_customers, name='delete_customers'),
+
+    # customer (buyer) routes
+    path('profile_buyer', views_buyer.profile_view, name='profile_buyer'),
+
+    # seller routes
+    path('profile_seller', views_seller.profile_view, name='profile_seller'),
+    path('update_seller_profile/<int:id>', views_seller.update_seller_profile, name='update_seller_profile'),
 ]
 ```
 
-Each entry: `path('URL-fragment', the-function-that-handles-it, name='short-label')`.
-
-- The `name=` is **crucial** — templates use `{% url 'login' %}` to build links so
-  they won't break if you later move the page.
-- Notice there are **no trailing slashes** on `base`, `login`, `user_add`, and
-  `customer_add`. By default Django redirects `/base/` to `/base`. This is fine but
-  inconsistent; the home page `'` does end effectively at the root.
-
-### 6.3 ecom_app/views.py — the "controller"
-
-```python
-from urllib import request
-
-from django.contrib.auth.forms import UserCreationForm
-from django.shortcuts import render, redirect
-
-from ecom_app.forms import loginform, sellerform, buyerform
-
-
-# Create your views here.
-def index(request):
-    return render(request,'index.html')
-
-def admin_page(request):
-    return render(request,'base.html')
-
-def login(request):
-    return render(request,'login.html')
-
-def user_add(request):
-    form1=loginform()
-    form2=sellerform()
-    if request.method=="POST":
-        form1=loginform(request.POST)
-        form2=sellerform(request.POST)
-        if form1.is_valid() and form2.is_valid():
-            user_data=form1.save(commit=False)
-            user_data.is_seller=True
-            user_data.save()
-            user1=form2.save(commit=False)
-            user1.user=user_data
-            user1.save()
-            return redirect('login')
-    return render(request,'user_add.html',{'form1':form1,'form2':form2})
-
-def customer_add(request):
-    form1=loginform()
-    form2=buyerform()
-    if request.method=="POST":
-        form1=loginform(request.POST)
-        form2=buyerform(request.POST)
-        if form1.is_valid() and form2.is_valid():
-            user_data=form1.save(commit=False)
-            user_data.is_buyer=True
-            user_data.save()
-            user1=form2.save(commit=False)
-            user1.user=user_data
-            user1.save()
-            return redirect('login')
-    return render(request,'customer_add.html',{'form1':form1,'form2':form2})
+**Each line means:**
+```
+path('the url after 127.0.0.1:8000/', which-function-handles-it, name='short-label')
 ```
 
-`render(request, 'template.html')` loads the named template from `templates/` and
-returns it to the browser. The `request` object holds everything about the
-visitor's HTTP request (cookies, POST data, user, etc.).
+The **`name=`** is important — in your HTML you use `{% url 'login' %}` instead of
+hard-coding `/login`. This way, if you change the URL later, the link updates
+automatically.
 
-- `index`, `admin_page`, and `login` are simple render functions.
-- `user_add` and `customer_add` are **form-handling** views: they show a blank
-  `loginform` + `sellerform` (or `buyerform`) on `GET`, and on `POST` they validate
-  both forms, set `is_seller=True` (or `is_buyer=True`) on the `Login` user, save
-  both objects, then redirect to the login page.
-- `ecom_app/forms.py` defines three `ModelForm`s (`loginform`, `sellerform`,
-  `buyerform`) tied to the models in §6.5.
-- The view function is named `login`, which shadows `django.contrib.auth.login`.
-  If you later want real authentication you must alias the import (see §14.1).
+The routes fall into three groups:
+- **Core** (`/`, `/login`, `/user_add`, `/customer_add`, `/seller_page`, `/buyer_page`, `/admin_page`) — handled by `views.py`.
+- **Admin CRUD** (`/view_customers`, `/update_customers/<id>`, `/delete_customers/<id>`) — handled by `views_admin.py`.
+- **Profile pages** (`/profile_buyer`, `/profile_seller`, `/update_seller_profile/<id>`) — handled by `views_buyer.py` and `views_seller.py` (covered in Task 5b).
 
-> ⚠️ **Note for later:** the current `login` view just *shows* the form — it does
-> not actually log anyone in. Fixing this is in §14.1.
+### 4.5 The templates (HTML)
 
-### 6.4 templates/login.html — the visual page
+#### `login.html`
 
-This file is a complete, self-contained HTML page: it declares its own `<head>`,
-inline `<style>`, and inline JavaScript (`togglePass()`). It even has:
+A standalone page (own `<head>`, own CSS, own JS). The form posts to itself:
+
+```html
+<form action="#" method="post" class="login-form">
+  {% csrf_token %}
+  <input type="text" id="username" name="username" />
+  <input type="password" id="password" name="password" />
+  <button type="submit">Log In</button>
+</form>
+```
+
+- `{% csrf_token %}` is Django's anti-forgery token — **required** on every POST form.
+- `name="username"` and `name="password"` are what `login_view` reads.
+
+#### `user_add.html` (seller signup)
+
+```html
+{% load crispy_forms_tags %}
+<form action="#" method="post" class="signup-form">
+  {% csrf_token %}
+  {{ form1|crispy }}    {{ form2|crispy }}
+  <button type="submit">Sign Up</button>
+</form>
+```
+
+- `{{ form1|crispy }}` renders the `loginform` with nice Bootstrap markup (thanks to
+  `crispy_forms` + `crispy_bootstrap5` from `settings.py`).
+- The view passes `form1` and `form2` in a context dictionary.
+
+#### `customer_add.html` (buyer signup)
+
+Same structure, but renders `loginform` + `buyerform`.
+
+### 4.6 Try it end-to-end
+
+With `runserver` running, do this in your browser:
+
+1. Go to <http://127.0.0.1:8000/user_add> — sign up a **seller** (username: `alice`,
+   password: `TestP@ss1!`).
+2. Go to <http://127.0.0.1:8000/login> — log in as `alice`.
+   → You land on <http://127.0.0.1:8000/seller_page> (the seller dashboard).
+3. Go to <http://127.0.0.1:8000/customer_add> — sign up a **buyer** (username: `bob`).
+4. Log in as `bob` → you land on <http://127.0.0.1:8000/buyer_page>.
+5. Log in as your **admin** (from Task 2) → you land on <http://127.0.0.1:8000/admin_page>.
+
+**That's the full signup → login → redirect cycle.** It works.
+
+---
+
+## Task 5 — The admin CRUD (manage buyers in a table)
+
+> Goal: the admin can list, edit, and delete buyers from a table.
+
+### 5.1 The views (`views_admin.py`)
+
+```python
+def view_customers(request):
+    customers = buyer.objects.all()               # grab every buyer
+    return render(request, 'admin/customers.html', {'customers': customers})
+
+def update_customers(request, id):
+    customers = buyer.objects.get(id=id)           # find one buyer
+    if request.method == "POST":
+        form = buyerform(request.POST, instance=customers)
+        if form.is_valid():
+            form.save()
+            return redirect('view_customers')
+    else:
+        form = buyerform(instance=customers)       # pre-fill with existing data
+    return render(request, 'admin/update.html', {'form': form})  # renders the edit form page
+
+def delete_customers(request, id):
+    customers = buyer.objects.get(id=id)
+    customers.delete()
+    return redirect('view_customers')   # ← already fixed! (see §10.3)
+```
+
+**Pattern:**
+- `view_customers` — `Model.objects.all()` → pass to template → `{% for %}` loop.
+- `update_customers` — `Model.objects.get(id=id)` → `Form(instance=obj)` to
+  pre-fill → on POST, `Form(request.POST, instance=obj)` → `form.save()`.
+- `delete_customers` — `Model.objects.get(id=id)` → `.delete()`.
+
+### 5.2 The URLs
+
+Already wired in `ecom_app/urls.py` (see §4.4):
+
+```python
+path('view_customers', views_admin.view_customers, name='view_customers'),
+path('update_customers/<int:id>', views_admin.update_customers, name='update_customers'),
+path('delete_customers/<int:id>', views_admin.delete_customers, name='delete_customers'),
+```
+
+`<int:id>` captures a number from the URL and passes it to the view.
+
+### 5.3 The template (`admin/customers.html`)
 
 ```django
-<a href="{% url 'index' %}">Property</a>
+{% extends 'admin/admin_base.html' %}
+{% block content %}
+  <table class="table table-dark">
+    <thead>
+      <tr>
+        <th scope="col">No.</th>
+        <th scope="col">Name</th>
+        <th scope="col">Email</th>
+        <th scope="col">Phone</th>
+        <th scope="col">Pincode</th>
+        <th scope="col">Address</th>
+        <th scope="col" colspan="2">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for i in customers %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ i.name }}</td>
+        <td>{{ i.email }}</td>
+        <td>{{ i.phone }}</td>
+        <td>{{ i.pincode }}</td>
+        <td>{{ i.address }}</td>
+        <td><a class="btn btn-info" href="{% url 'update_customers' i.id %}">Update</a></td>
+        <td><a class="btn btn-danger" href="{% url 'delete_customers' i.id %}" onclick="return confirm('Are you sure you want to delete?');">Delete</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
 ```
 
-which proves `{% url %}` reverse-lookup works (you can jump to the home page from
-the login screen).
+- `{% extends 'admin/admin_base.html' %}` — inherits the Spark Admin dashboard shell.
+- `<thead>` / `<tbody>` — proper table structure with `table table-dark` Bootstrap classes.
+- `{{ forloop.counter }}` — auto-numbered row (1, 2, 3, …).
+- `{{ i.name }}`, `{{ i.email }}`, etc. — shows each buyer's fields.
+- `<a class="btn btn-info">` / `<a class="btn btn-danger">` — Bootstrap styled buttons.
+- `{% url 'update_customers' i.id %}` — builds the URL `/update_customers/3`.
+- `onclick="return confirm(...)"` — asks the admin before deleting.
 
-### 6.5 ecom_app/models.py — the database tables
+### 5.4 Try it
 
-The project uses a **custom user model** (`Login`) plus two related profile models:
+1. Sign up a few buyers at `/customer_add` (Task 4).
+2. Go to <http://127.0.0.1:8000/view_customers> — you see a table of all buyers.
+3. Click **Update** → fix a phone number → submit → redirected back to the table.
+4. Click **Delete** → the buyer is removed from the table.
+
+---
+
+## Task 5b — Profile pages (buyer view, seller view + edit)
+
+> Goal: after logging in, the user can visit their own profile page and (for
+> sellers) edit their profile.
+
+This feature is split across **two new view files** that mirror the CRUD pattern
+in `views_admin.py`.
+
+### 5b.1 The buyer profile (`views_buyer.py`)
 
 ```python
-from django.contrib.auth.models import AbstractUser
-from django.db import models
-
-class Login(AbstractUser):
-    is_seller=models.BooleanField(default=False)
-    is_buyer=models.BooleanField(default=False)
-
-class buyer(models.Model):
-    user=models.OneToOneField(Login,on_delete=models.CASCADE)
-    name=models.CharField(max_length=100)
-    email=models.EmailField()
-    phone=models.CharField(max_length=100)
-    pincode=models.CharField(max_length=100)
-    address=models.CharField(max_length=100)
-    def __str__(self):
-        return self.name
-
-class seller(models.Model):
-    user=models.OneToOneField(Login,on_delete=models.CASCADE)
-    name=models.CharField(max_length=100)
-    email=models.EmailField()
-    phone=models.CharField(max_length=100)
-    location=models.CharField(max_length=100)
-    tax_number=models.CharField(max_length=100)
-    def __str__(self):
-        return self.name
+def profile_view(request):
+    userdata = request.user                   # the currently logged-in user
+    buyer_user = buyer.objects.get(user=userdata)   # find this user's buyer profile
+    return render(request, 'buyer/profile_view_buyer.html', {'buyer_user': buyer_user})
 ```
 
-- `Login` extends `AbstractUser`, adding `is_seller` and `is_buyer` flags so a
-  single account can be either a seller *or* a buyer.
-- `buyer` and `seller` are linked to `Login` via a `OneToOneField` (one user → one
-  profile). Their extra fields store contact/address/tax details.
-- `settings.py` declares `AUTH_USER_MODEL = 'ecom_app.Login'` so Django uses this
-  model everywhere instead of the built-in `User`.
-- These three models are registered in `ecom_app/admin.py` and appear in the Django
-  admin under the same names.
+- **Pattern:** read `request.user` → look up the matching `buyer` record via the
+  `OneToOneField` → pass it to the template.
 
-### 6.4 templates/login.html — the visual page
+### 5b.2 The seller profile + edit (`views_seller.py`)
 
-This file is a complete, self-contained HTML page: it declares its own `<head>`,
-inline `<style>`, and inline JavaScript (`togglePass()`). It even has:
+```python
+def profile_view(request):
+    userdata = request.user
+    seller_user = seller.objects.get(user=userdata)
+    return render(request, 'seller/profile_view_seller.html', {'seller_user': seller_user})
+
+def update_seller_profile(request, id):
+    seller_user = seller.objects.get(id=id)
+    if request.method == "POST":
+        form = sellerform(request.POST, instance=seller_user)
+        if form.is_valid():
+            form.save()
+            return redirect('profile_seller')     # back to the profile page
+    else:
+        form = sellerform(instance=seller_user)   # pre-fill with existing data
+    return render(request, 'seller/update_seller_profile.html', {'form': form})
+```
+
+- `profile_view` is the same pattern as the buyer view — just for `seller`.
+- `update_seller_profile` follows the same edit-then-redirect pattern as
+  `update_customers` in §5.1: `instance=obj` pre-fills, `form.save()` persists,
+  then redirect back to the profile page.
+
+> ⚠️ **Bug to fix later:** `update_seller_profile.html` has a broken URL tag —
+> `{% url '' seller_user.id %}` (empty name). It should point to the correct
+> route. See §10.10.
+
+### 5b.3 The template — buyer profile (`buyer/profile_view_buyer.html`)
 
 ```django
-<a href="{% url 'index' %}">Property</a>
+{% extends 'buyer/buyer_base.html' %}
+{% block content %}
+  <label>Name: {{ buyer_user.name }}</label>
+  <label>Email: {{ buyer_user.email }}</label>
+  <label>Phone: {{ buyer_user.phone }}</label>
+  <label>Pincode: {{ buyer_user.pincode }}</label>
+  <label>Address: {{ buyer_user.address }}</label>
+{% endblock %}
 ```
 
-which proves `{% url %}` reverse-lookup works (you can jump to the home page from
-the login screen).
+### 5b.4 The template — seller profile (`seller/profile_view_seller.html`)
+
+```django
+{% extends 'seller/seller_base.html' %}
+{% block content %}
+  {{ seller_user }}
+  <label>Name: {{ seller_user.name }}</label>
+  <label>Email: {{ seller_user.email }}</label>
+  <label>Phone: {{ seller_user.phone }}</label>
+  <label>Location: {{ seller_user.location }}</label>
+  <label>Tax Number: {{ seller_user.tax_number }}</label>
+  <a class="btn btn-info" href="{% url 'update_seller_profile' seller_user.id %}">Update</a>
+{% endblock %}
+```
+
+### 5b.5 The template — seller edit form (`seller/update_seller_profile.html`)
+
+```django
+{% extends 'seller/seller_base.html' %}
+{% block content %}
+  <label> Profile : {{ seller_user }}</label>
+  {{ form }}
+{% endblock %}
+```
+
+> ⚠️ **Bug to fix later:** this template renders `{{ form }}` as raw HTML and has
+> no `<form>` tag or submit button. It should wrap `{{ form }}` in a proper
+> `<form method="post">` with `{% csrf_token %}`. See §10.10.
+
+### 5b.6 The dashboard shells
+
+All three dashboard base templates (`admin/admin_base.html`, `buyer/buyer_base.html`,
+`seller/seller_base.html`) share the **"Spark Admin"** design — a Bootstrap 5
+dashboard theme with a sidebar, top navbar, and footer. They are nearly identical;
+each extends its role-specific base and fills `{% block content %}`.
+
+The buyer shell links **My Account** → `{% url 'profile_buyer' %}`, and the seller
+shell links **My Account** → `{% url 'profile_seller' %}`.
+
+### 5b.7 Try it
+
+1. Sign up a seller at `/user_add`, log in, and get redirected to `/seller_page`.
+2. In the seller dashboard's profile dropdown, click **My Account** → you land on
+   `/profile_seller` and see your profile.
+3. Click **Update** → fill in the form → submit → redirected back to the profile.
+4. Sign up a buyer at `/customer_add`, log in → `/buyer_page` → **My Account** →
+   `/profile_buyer`.
 
 ---
 
-## 7. The settings file explained (ecom/settings.py) — one setting per concern
+## Task 6 — Django's built-in admin panel (`/admin/`)
 
-You will spend most of your time here. Each block below is a copy/paste excerpt
-with an explanation.
+You get a professional admin interface **for free**.
 
-### 7.1 Project root
+Remember in Task 2 you ran `createsuperuser`? That same account logs into Django's
+built-in admin at <http://127.0.0.1:8000/admin/>.
 
-```python
-BASE_DIR = Path(__file__).resolve().parent.parent
-```
-`__file__` = the path to `settings.py` = `.../ecom/settings.py`.
-`.parent` = `.../ecom`.
-`.parent.parent` = `.../` (the project root).
-**Everything is built from `BASE_DIR`.**
-
-### 7.2 Security (development only — these must change for real deployment)
+`ecom_app/admin.py` registers all three models:
 
 ```python
-SECRET_KEY = 'django-insecure-...'     # never commit the real one to GitHub
-DEBUG = True                           # shows full error pages when something breaks
-ALLOWED_HOSTS = []                     # empty = only localhost may view the site
-```
-While `DEBUG = True` you get helpful red error pages. Leave this on while learning.
-
-### 7.3 Installed apps
-
-```python
-INSTALLED_APPS = [
-    'django.contrib.admin',            # the /admin/ area
-    'django.contrib.auth',             # users, groups, permissions
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'ecom_app',                        # YOUR app
-    'crispy_forms',                    # renders Bootstrap-friendly forms
-    'crispy_bootstrap5'                # crispy-forms adapter for Bootstrap 5
-]
+admin.site.register(Login)
+admin.site.register(seller)
+admin.site.register(buyer)
 ```
 
-Adding `'ecom_app'` is what makes Django treat `ecom_app/` as part of the site
-(so its `models.py`, `templates/` fallback, `migrations/` are all discovered).
-The two `crispy_*` apps enable `{{ form|crispy }}` rendering in templates.
-
-### 7.4 Middleware (runs before/after every request)
-
-Standard list — security headers, sessions, CSRF (form forgery protection),
-authentication, messages, clickjacking. You normally don't touch this while
-learning.
-
-### 7.5 Templates
-
-```python
-ROOT_URLCONF = 'ecom.urls'             # use the project-level URL file shown in §6.1
-
-TEMPLATES = [{
-    'BACKEND': 'django.template.backends.django.DjangoTemplates',
-    'DIRS': [os.path.join(BASE_DIR, 'templates')],   # look in /templates FIRST
-    'APP_DIRS': True,                                  # ALSO look inside app folders
-    'OPTIONS': {
-        'context_processors': [                       # inject `request` and messages
-            'django.template.context_processors.request',
-            'django.contrib.auth.context_processors.auth',
-            'django.contrib.messages.context_processors.messages',
-        ],
-    },
-}]
-```
-The `templates/` folder is where `login.html`, `index.html`, and `base.html` live
-— that is why `views.py` can find them by name.
-
-### 7.6 The database (now PostgreSQL)
-
-```python
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "e_commerce_db",
-        "USER": "postgres",
-        "PASSWORD": "1234",
-        "HOST": "127.0.0.1",
-        "PORT": "5432",
-    }
-}
-```
-
-PostgreSQL replaced SQLite — make sure PostgreSQL is installed and running, and
-that the `e_commerce_db` database exists (see §3). The `psycopg2-binary` driver
-must be installed in the `.venv` for Django to connect.
-
-### 7.6b Custom user model
-
-```python
-AUTH_USER_MODEL = 'ecom_app.Login'
-```
-
-This tells Django to use the project-defined `Login` model (in
-`models.py` §6.5) as the user model. Changing this *after* the first migration
-is painful — it is already set, so don't change it unless you know what you are
-doing.
-
-### 7.7 Password rules
-
-Four validators enforce secure passwords for new users (length, not-common, not-
-fully numeric, not too similar to username). That's why `createsuperuser` rejects
-weak passwords in §4.
-
-### 7.8 Internationalization
-
-Defaults (`en-us`, `UTC`, internationalization on). No change needed.
-
-### 7.9 Static files
-
-```python
-STATIC_URL = 'static/'                              # the URL prefix
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]  # where to FIND extra static files
-```
-This tells Django: "when a browser asks for `/static/style.css`, look in the
-`static/` folder in the project root." That is why `login.html` can use
-`{% static 'css/style.css' %}` and find the real file.
-
-### 7.10 The `main.py` file
-
-`main.py` is **NOT part of the website.** It is a leftover auto-generated file
-PyCharm creates when you start a project ("Press Shift+F10 to execute…"). It only
-prints "Hi, PyCharm" when you double-click it in the IDE. **Ignore it.** Django never
-reads it. You can delete it later if you want.
-
-### 7.11 Email (currently broken — see "Known issues" in §14)
-
-```python
-MAILERS = {
-    'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
-    },
-}
-```
-This uses the key `MAILERS`, which is **not a real Django setting**. The correct
-key is `EMAIL_BACKEND`. See §14.2 for the fix.
+So when you log in to `/admin/` you can add, edit, and delete **Login**, **seller**,
+and **buyer** records right from the browser — no code needed.
 
 ---
 
-## 8. The templates, side by side
+## Task 7 — Make your first small change (and see it live)
 
-| File | Size | Role | Status |
-|---|---|---|---|
-| `templates/base.html` | 53 lines, ~2 KB | simple shell with `{% block content %}` | **live** (used by `/base`) |
-| `templates/index.html` | 1040 lines, ~42 KB | full Bootstrap "Property" homepage | **live** (used by `/`) |
-| `templates/login.html` | 276 lines, ~6.7 KB | standalone login page | **live** (used by `/login`) |
-| `templates/user_add.html` | — | seller signup page (renders `loginform` + `sellerform`) | **live** (used by `/user_add`) |
-| `templates/customer_add.html` | — | buyer signup page (renders `loginform` + `buyerform`) | **live** (used by `/customer_add`) |
-| `templates/user.html` | — | leftover sample template | **NOT used** |
-| `templates/Modified_files/base.html` | 517 lines, ~30 KB | a fancier dashboard shell | **NOT used** |
-| `templates/Modified_files/index.html` | identical to `templates/index.html` | duplicate backup | **NOT used** |
+> Goal: prove the request → view → template chain by editing text.
 
-### 8.1 templates/base.html (simple shell, 53 lines)
-
-- Has `{% load static %}` at the top — good.
-- Loads `runtime.js`, `vendors.js`, `2026.js`, `vendor-chartjs.js`,
-  `vendor-fullcalendar.js`, and `style.css` from `static/`.
-- Sets the page `<title>` to "Dashboard · 2026 Redesign Preview".
-- Contains a placeholder `<h1>welcome</h1>` followed by `{% block content %}{% endblock %}`
-  where child templates inject page-specific markup.
-
-> ⚠️ The `<h1>welcome</h1>` sits *before* `{% block content %}`, so it will show on
-> every page that extends this base. That may not be what you want.
-
-### 8.2 templates/Modified_files/base.html (the big one, 517 lines)
-
-This is a complete dashboard UI (KPIs, charts, cards). But:
-- It **lacks `{% load static %}`** — if any line uses `{% static %}` it raises
-  "TemplateSyntaxError: 'static' is not a valid tag". (The version you read
-  actually has no static tag — it loads JS from raw paths — so it *renders*,
-  but it is inconsistent.)
-- It is **not referenced by any view** (only the small `base.html` is).
-- `static/2026.js` is a webpack bundle that **builds the sidebar and topbar
-  client-side** from hard-coded menu data (Dashboard, Email, Calendar, Chat,
-  Charts, Forms, …). Those menu links point to files like `email.html`,
-  `calendar.html` that do **not exist** as routes — they rely on the old
-  multi-page `index.html` asset set.
-
-There is also a stray empty file at the **project-root** `Modified_files/base.html`
-(size 0) — clearly an accidental copy. You can delete the whole `Modified_files/`
-scratch folder once you no longer need the backup.
-
-### 8.3 templates/index.html (the homepage)
-
-- Uses the "Property" Bootstrap template (author: Untree.co), 1040 lines.
-- Loads `icomoon` and `flaticon` icon fonts plus AOS + tiny-slider JS.
-- The hero title: "Easiest way to find your dream home".
-- **Broken links to be aware of:** the navbar uses `{% static 'index.html' %}`,
-  `{% static 'properties.html' %}`, `{% static 'services.html' %}`, etc. — these
-  files don't exist in `static/`, so those menu items 404. Fix by changing them
-  to `{% url 'index' %}` or removing them.
-
-### 8.5 templates/user_add.html & templates/customer_add.html
-
-- Both render two `ModelForm`s side-by-side (`loginform` + `sellerform` or
-  `buyerform`).
-- They use `{% csrf_token %}` inside the `<form>` so POST works.
-- On successful submit the view redirects to `/login` (see §6.3).
-
-- Declares its own `<style>` and JavaScript inline.
-- Contains a "Show/Hide password" toggle (`togglePass()`).
-- Has a fake "Forgot password?" link and a "Sign up" link that both `#` (dead).
-
----
-
-## 9. Step 5 — Understanding the URL→view→template flow
-
-Visit these URLs while `runserver` is running to see each part in action:
-
-| URL | View called | Template shown |
-|---|---|---|
-| <http://127.0.0.1:8000/> | `views.index` | `templates/index.html` |
-| <http://127.0.0.1:8000/base> | `views.admin_page` | `templates/base.html` |
-| <http://127.0.0.1:8000/login> | `views.login` | `templates/login.html` |
-| <http://127.0.0.1:8000/user_add> | `views.user_add` | `templates/user_add.html` |
-| <http://127.0.0.1:8000/customer_add> | `views.customer_add` | `templates/customer_add.html` |
-| <http://127.0.0.1:8000/admin/> | Django's built-in | admin login page |
-
-Open the browser's "View source" and "Inspect element" on each page. You will see
-exactly the templates above rendered to HTML. This is the quickest way to confirm
-"the file I edited is the one the browser sees."
-
----
-
-## 10. Step 6 — Make your first tiny change (and see it live)
-
-Django's dev server watches files and reloads automatically.
-
-1. Stop `runserver` with `Ctrl + C` (if running).
-2. Open `templates/login.html` in your editor.
-3. Find the line:
+1. Keep `runserver` running.
+2. Open `templates/login.html`.
+3. Find:
    ```html
    <h1 class="login-title">Welcome back</h1>
    ```
-4. Change the text to:
+4. Change to:
    ```html
-   <h1 class="login-title">Welcome back — Django is working</h1>
+   <h1 class="login-title">Welcome back — I edited this!</h1>
    ```
 5. Save the file.
-6. Restart `python manage.py runserver`.
-7. Reload <http://127.0.0.1:8000/login>.
+6. Refresh <http://127.0.0.1:8000/login>.
 
-You will see the new text. This proves the request → view → template chain.
+You see your new text. ✅
+
+> **Note:** HTML/CSS changes auto-reload. **Python** changes (`.py` files) require
+> you to **stop + restart** `runserver`.
 
 ---
 
-## 11. Step 7 — Add a real page (create your own)
+## Task 8 — Add your own page (build from nothing)
 
-This is the smallest useful exercise: make a third page appear at `/about`.
+> Goal: a new page at `/about` that you create yourself.
 
-### 11.1 Add a view
+Follow the **4-file recipe** every time:
 
-Open `ecom_app/views.py` and add:
+| Step | File | What to do |
+|---|---|---|
+| 1 | `templates/about.html` | Write the HTML. |
+| 2 | `ecom_app/views.py` | Add `def about(request): return render(request, 'about.html')`. |
+| 3 | `ecom_app/urls.py` | Add `path('about', views.about, name='about')`. |
+| 4 | (restart `runserver`) | Visit <http://127.0.0.1:8000/about>. |
 
-```python
-def about(request):
-    return render(request, 'about.html')
-```
-
-Save.
-
-### 11.2 Add a URL
-
-Open `ecom_app/urls.py` and add a line:
-
-```python
-path('about', views.about, name='about'),
-```
-
-Save.
-
-### 11.3 Add the template
-
-Create `templates/about.html`:
-
+**Template (`templates/about.html`):**
 ```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>About — E_Commerce_RE</title>
+  <title>About</title>
 </head>
 <body>
   <h1>About this site</h1>
-  <p>This page was created in the beginner tutorial.</p>
-  <p><a href="{% url 'index' %}">Back to home</a></p>
+  <p>Built by following the beginner tutorial.</p>
+  <a href="{% url 'index' %}">Back to home</a>
 </body>
 </html>
 ```
 
-### 11.4 Verify
-
-Restart `runserver` (dev server doesn't always pick up new modules instantly).
-Go to <http://127.0.0.1:8000/about>. You should see your new page, and the
-"Back to home" link works because of `{% url 'index' %}`.
-
 ---
 
-## 12. Step 8 — Connect templates with `{% block %}` (template inheritance)
+## Task 9 — Common commands (cheat sheet)
 
-The small `base.html` is designed to be *extended*. Try it with `login.html`.
-
-At the very top of `login.html` (before `<!DOCTYPE html>`), you currently have a
-full standalone page. To inherit from `base.html` instead, you would eventually
-replace the whole file with:
-
-```django
-{% extends 'base.html' %}
-{% block content %}
-  <div class="login-wrapper">
-    <form method="post">{% csrf_token %}
-      <!-- your existing form markup -->
-    </form>
-  </div>
-{% endblock %}
-```
-
-For now, **do the standalone version** — it works. The inheritance is an optional
-refactor covered in §14 ("what's broken").
-
-> ⚠️ `base.html` pulls in `style.css`, `2026.js`, etc. If `login.html` extends it,
-> the fancy inline styles in the current `login.html` will be overridden by the
-> dashboard's `style.css`. Keep the standalone `login.html` for the pretty login
-> card; only switch to inheritance once you are ready to restyle it.
-
----
-
-## 13. Common commands you will type (the cheat sheet)
+Run these from the project root **with `.venv` activated**:
 
 | Command | What it does |
 |---|---|
-| `python manage.py runserver` | start the dev web server (Ctrl+C to stop) |
-| `python manage.py migrate` | apply database changes (always run after pulling new code) |
+| `python manage.py runserver` | start the dev server (Ctrl+C to stop) |
+| `python manage.py migrate` | build/update database tables from `models.py` |
 | `python manage.py makemigrations` | tell Django you changed `models.py` |
-| `python manage.py createsuperuser` | make an admin login |
+| `python manage.py createsuperuser` | make an admin account |
 | `python manage.py changepassword USER` | reset a user's password |
 | `python manage.py shell` | open a Python prompt with Django loaded |
 | `python manage.py test` | run `tests.py` |
-| `python manage.py showmigrations` | list which migrations are installed/applied |
+| `python manage.py showmigrations` | see which tables are built |
 | `python manage.py check` | run Django's self-diagnostics |
-| `python manage.py startapp NAME` | create a new app folder |
-
-Type them **in the project root** and with the virtualenv **activated** (`. .venv\Scripts\Activate.ps1`).
 
 ---
 
-## 14. Known issues & "things a beginner always misses"
+## Task 10 — Things to fix (the bugs a beginner misses)
 
-These are real problems in the current code. They do not block you from running
-the site, but you will hit them eventually.
+These are real problems in the code. They don't stop the site from running, but
+they will bite you later.
 
-### 14.1 The login view does not actually log anyone in
+### 10.1 `login_view` returns nothing on bad password
 
-`views.py`:
-```python
-def login(request):
-    return render(request, 'login.html')
-```
-This only shows the form. The form has no `{% csrf_token %}`, no `action`, and no
-server-side code that calls Django's `authenticate()` / `login()`. Clicking "Log
-In" does nothing useful.
+When `authenticate()` returns `None` (wrong password), the function prints a
+message and **falls through without returning anything**. Django shows a 500 error.
 
-**Fix sketch (advanced):**
-```python
-from django.contrib.auth import authenticate, login as auth_login
-from django.shortcuts import redirect
-
-def user_login(request):
-    if request.method == 'POST':
-        user = authenticate(
-            request,
-            username=request.POST.get('username'),
-            password=request.POST.get('password'),
-        )
-        if user is not None:
-            auth_login(request, user)
-            return redirect('index')
-    return render(request, 'login.html')
-```
-Plus add `{% csrf_token %}` inside the `<form>`, set `action="{% url 'login' %}"}`,
-add `LOGIN_URL = 'login'` and `LOGIN_REDIRECT_URL = 'index'` to
-`settings.py`, and protect pages with `@login_required`.
-
-> The current function is *also* named `login`, which shadows the standard Django
-> `django.contrib.auth.login` function. Rename it before importing — that's why
-> the sketch above aliases the import as `auth_login`.
->
-> **Contrast with signup:** the `user_add` and `customer_add` views (§6.3) *do*
-> handle `POST` correctly — they validate two forms, save the user with the
-> right flag (`is_seller`/`is_buyer`), link the profile, then redirect. Use them
-> as a reference when you write the real login handler.
-
-### 14.2 `MAILERS` is the wrong setting name
+**Fix:** at the end of the `if request.method == "POST"` block, after the
+`else:` branch, add:
 
 ```python
-MAILERS = { 'default': { 'BACKEND': 'django.core.mail.backends.console.EmailBackend' } }
+    return render(request, 'login.html')   # show login again, with no error message yet
 ```
-This should be:
+
+### 10.2 Two `admin_page` functions in `views.py`
+
+There are two definitions. The second one wins. Rename the first to
+`dashboard_page` and update `urls.py`:
+
+```python
+def dashboard_page(request):
+    return render(request, 'base.html')
+```
+```python
+path('base', views.dashboard_page, name='base'),
+```
+
+### 10.3 `delete_customers` is missing `request`  *(already fixed!)*
+
+The original bug was that `delete_customers` returned `render('admin/customers.html')`
+without the `request` object — a crash. The code in `views_admin.py` now correctly
+returns:
+
+```python
+def delete_customers(request, id):
+    customers = buyer.objects.get(id=id)
+    customers.delete()
+    return redirect('view_customers')
+```
+
+No action needed — this one is already fixed.
+
+### 10.4 `MAILERS` is not a real Django setting
+
+In `settings.py` the email configuration uses `MAILERS` (the syntax from the
+`django-mailer` package), but Django's built-in email system ignores it:
+
+```python
+MAILERS = {
+    'default': {
+        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
+    }
+}
+```
+
+Django expects a top-level `EMAIL_BACKEND` setting instead. Change to:
+
 ```python
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 ```
-`MAILERS` is not a real Django setting, so email sending is currently
-"unconfigured" (Django would raise an exception the first time you actually try
-to send mail). Renaming it fixes that.
 
-### 14.3 No `requirements.txt`
+### 10.5 No `requirements.txt`
 
-There is no `requirements.txt`. The project relies on the `.venv` folder being
-committed/shared. For a fresh setup you would need to recreate it. To fix:
+To make the project reproducible on another machine:
 
 ```powershell
-. .venv\Scripts\Activate.ps1
 python -m pip freeze > requirements.txt
 ```
+
 Then on a new machine:
 ```powershell
 python -m venv .venv
 . .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
-> Note: you must also install `psycopg2-binary` separately if PostgreSQL support
-> was missing from the freeze output.
+> Don't forget `psycopg2-binary` and `crispy-bootstrap5`.
 
-### 14.4 No `.gitignore` at the project root
+### 10.6 No `.gitignore` at the project root
 
-There is **no** `.gitignore` inside `E_Commerce_RE`. The `.gitignore` that exists
-is at `C:\Users\Faizy` (the parent). Consequence: `db.sqlite3`, `.venv/`, and
-`__pycache__/` could accidentally get committed.
-
-Add a `E_Commerce_RE/.gitignore` containing at minimum:
+Add a file `E_Commerce_RE/.gitignore`:
 ```
 __pycache__/
 *.pyc
 *.pyo
-/staticfiles/
-.DS_Store
 .venv/
+*.sqlite3
 ```
-> Note: `db.sqlite3` is **no longer used** (PostgreSQL is the active database),
-> but the line is harmless and protects the old file if it reappears.
 
-### 14.5 The git repository lives in the wrong place
+### 10.7 Broken links in `index.html`
 
-`git rev-parse --show-toplevel` reports `C:/Users/Faizy`, not the project folder.
-That means **Git is tracking your whole user profile**, not just this project.
-`git status` from the project folder shows dozens of unrelated files.
+The navbar uses `{% static 'index.html' %}`, `{% static 'properties.html' %}`, etc.
+— those files don't exist. They produce 404s. Change them to real URLs or remove them.
 
-**Fix:** if you want real version control for just this project, run from inside
-`E_Commerce_RE`:
-```powershell
-git init            # creates E_Commerce_RE/.git
-```
-…then the first commit will snapshot only project files. (Do this only if you
-intend to use Git here — it's optional and read-only-exploration does not require it.)
+### 10.8 Missing `favicon.png`
 
-### 14.6 Missing `favicon.png`
+`login.html` and `index.html` reference `{% static 'favicon.png' %}` but the file
+doesn't exist. Either add one to `static/` or remove the `<link rel="shortcut icon">` line.
 
-`login.html` and `index.html` both call `{% static 'favicon.png' %}`, but
-`static/favicon.png` does not exist. The page still renders (the `<link>` just
-gets a 404 URL), but it's untidy. Add a `favicon.png` to `static/` or remove the
-line.
+### 10.9 Unused / incorrect imports in `views.py`
 
-### 14.7 The `/base` URL has no trailing slash
-
-`path('base', ...)` vs the more idiomatic `path('base/', ...)`. With the current
-setting, a visitor typing `/base/` gets redirected to `/base` (and vice-versa for
-pages with trailing slashes). Django's default `APPEND_SLASH = True` hides it, but
-the inconsistency is easy to trip over. Use trailing slashes everywhere once you
-have time.
-
-### 14.8 `main.py` is confusing
-
-It is a PyCharm template, not Django code. See §7.11. Delete or ignore it; it
-does not affect the website.
-
-### 14.9 `Modified_files/` is ambiguous
-
-Two copies exist:
-- `templates\Modified_files\base.html` (full dashboard, 517 lines) — not wired to
-  a view.
-- `Modified_files\base.html` (project root, **0 bytes**) — accidental empty
-  file.
-
-Both are backups/prototypes. To avoid confusion, decide on ONE `base.html` and
-delete the rest.
-
----
-
-## 15. The Django admin site (your built-in control panel)
-
-Once you `createsuperuser` (§4) and `migrate` (§3), go to:
-
-<http://127.0.0.1:8000/admin/>
-
-You will see the login form, then the Django admin index. The three models in
-`models.py` are **already registered** in `ecom_app/admin.py`:
+At the top of `ecom_app/views.py`:
 
 ```python
-from django.contrib import admin
-from ecom_app.models import seller, buyer, Login
-
-admin.site.register(Login)
-admin.site.register(seller)
-admin.site.register(buyer)
+from urllib import request            # ← wrong — `urllib.request` is a stdlib module, not a Django request
+from django.core.mail import message   # ← wrong — `message` is not exported from django.core.mail
 ```
 
-So the admin will show **Login**, **seller**, and **buyer** sections where you can
-add/edit/delete records — not just Django's defaults.
+Neither is used anywhere in the file. They won't crash the app (Python just loads
+unused names), but they are misleading. Remove both lines.
 
----
+### 10.10 `update_seller_profile.html` is missing a `<form>` wrapper
 
-## 16. Project folder layout (quick visual reference)
+The template in `templates/seller/update_seller_profile.html` renders `{{ form }}`
+as raw HTML with no `<form>` tag, no `{% csrf_token %}`, and no submit button.
+Additionally, the Save link uses a broken URL tag: `{% url '' seller_user.id %}`
+(empty name → `NoReverseMatch`).
 
-```
-E_Commerce_RE/
-├── .idea/                 # PyCharm project metadata (auto-generated, share or ignore)
-├── .venv/                 # Python virtual environment (DO NOT edit; re-create with pip)
-├── static/                # CSS / JS / fonts / images  (browser downloads these)
-│   ├── css/               │  ├── bootstrap.css
-│   │   ├── aos.css           └── tiny-slider.css
-│   ├── fonts/             │  ├── flaticon/   (font icons)
-│   │   └── icomoon/        └── (webfont packs)
-│   ├── images/            #   hero_bg_1..3.jpg, logo.png, person_1..6.jpg
-│   ├── js/                #   bootstrap.bundle.min.js, aos.js, custom.js
-│   ├── scss/              #   Bootstrap SCSS sources (source of css/bootstrap)
-│   ├── 2026.js            #   webpack bundle → builds dashboard DOM (sidebar/topbar)
-│   ├── runtime.js         #   webpack runtime chunk
-│   ├── vendors.js         #   third-party vendor bundle
-│   ├── style.css          #   global stylesheet (the big one)
-│   ├── vendor-chartjs.js
-│   └── vendor-fullcalendar.js
-├── templates/             # HTML pages
-│   ├── base.html          # simple shell
-│   ├── index.html         # home page
-│   ├── login.html         # login page
-│   ├── user_add.html      # seller signup page
-│   ├── customer_add.html  # buyer signup page
-│   ├── user.html          # leftover sample (NOT used)
-│   └── Modified_files/    # backup / prototype versions (not live)
-├── ecom/                  # the Django "project" package
-│   ├── __init__.py
-│   ├── asgi.py            # entry for async servers
-│   ├── settings.py        # ALL configuration
-│   ├── urls.py            # master URL map
-│   └── wsgi.py            # entry for normal (sync) servers
-├── ecom_app/              # the Django "app" package  (your code lives here)
-│   ├── __init__.py
-│   ├── admin.py           # register models (Login, seller, buyer) for admin
-│   ├── apps.py            # app metadata (registers the app)
-│   ├── forms.py           # ModelForms: loginform, sellerform, buyerform
-│   ├── migrations/        # saved database-change history
-│   ├── models.py          # Login, seller, buyer
-│   ├── tests.py           # automated tests (currently empty)
-│   ├── urls.py            # app-level URL map
-│   ├── views.py           # index, admin_page, login, user_add, customer_add
-│   ├── views_admin.py     # empty placeholder
-│   ├── views_buyer.py     # empty placeholder
-│   ├── views_seller.py    # empty placeholder
-│   ├── manage.py is at the project root (runserver, migrate, test...)
-└── main.py                # PyCharm sample script (ignore)
+**Fix:** wrap the form properly:
+
+```django
+{% extends 'seller/seller_base.html' %}
+{% block content %}
+  <form method="post">
+    {% csrf_token %}
+    {{ form }}
+    <button type="submit">Save</button>
+  </form>
+{% endblock %}
 ```
 
 ---
 
-## 17. How to run the project from a totally fresh terminal (one checklist)
+## Task 11 — Where to go next
 
-Follow these steps verbatim each time you sit down to work:
+Now you understand every piece. Here is the logical next step for each part:
 
-1. Open **PowerShell**.
-2. Go to the project folder:
-   ```powershell
-   Set-Location "C:\Users\Faizy\PycharmProjects\E_Commerce_RE"
-   ```
-3. Activate the virtualenv:
-   ```powershell
-   . .venv\Scripts\Activate.ps1
-   ```
-4. (Only the first time) make sure PostgreSQL is running and `e_commerce_db`
-   exists (see §3).
-5. (Only the first time) build the database:
-   ```powershell
-   python manage.py migrate
-   ```
-6. (Only the first time) create an admin user:
-   ```powershell
-   python manage.py createsuperuser
-   ```
-7. Start the server:
-   ```powershell
-   python manage.py runserver
-   ```
-8. Open a browser to <http://127.0.0.1:8000/>.
-
-That's it. Leave step 7 running while you work; the page reloads when you save a
-file.
-
-Then open the browser to <http://127.0.0.1:8000/> and try the checklist in §17
-whenever you start a new terminal session.
+1. **Models** — add a `Product` model, run `makemigrations` + `migrate`, register it
+   in `admin.py`.
+2. **Views** — make the buyer/seller dashboards show real data (products, orders,
+   etc.) instead of being empty shells. Add profile pages for buyers (mirror the
+   seller pattern in `views_buyer.py`).
+3. **Templates** — make `login.html` extend `base.html` so all pages share the same
+   header/footer. Fix the broken links in `index.html`. Finish the
+   `update_seller_profile.html` form (§10.10).
+4. **Forms** — add search / filter / pagination to `view_customers`.
+5. **Auth** — add password reset emails (fix the `EMAIL_BACKEND` setting first).
+6. **Profiles** — add login-required decorators (`@login_required`) to the profile
+   views so anonymous users can't access them. Add a logout view.
+7. **Testing** — write a test in `tests.py` that signs up a user and logs in.
+8. **Deployment** — set `DEBUG = False`, add `ALLOWED_HOSTS`, and serve with
+   Gunicorn behind Nginx. (Different topic.)
 
 ---
 
-## 18. Troubleshooting (read this when something is "not working")
+## Quick restart checklist
 
-| Symptom | Cause / Fix |
-|---|---|
-| `python` is not recognized | You are not in the virtualenv. Re-run `. .venv\Scripts\Activate.ps1` **in this terminal**. |
-| "No module named django.contrib" | Wrong Python. Activate the `.venv` (step 3 above). |
-| "No module named psycopg2" / "could not connect to server" | PostgreSQL driver missing or server not running. `pip install psycopg2-binary` in the venv, then verify PostgreSQL is running and `e_commerce_db` exists (§3). |
-| Admin page says "database is locked" | A previous `runserver`/`shell` is still open. Close other terminals, then `migrate` again. |
-| Page shows a 404 at `/login` but the code looks right | You removed `runserver`, edited code, but forgot to restart the server. Restart it. |
-| `TemplateDoesNotExist at /` for some file | The template name in `views.py` doesn't match a file in `templates/`. Check spelling and case (Linux/Mac is case-sensitive; Windows is not). |
-| Form POST does nothing | There is no `{% csrf_token %}` in the `<form>`, or the view ignores `request.method == 'POST'`. |
-| Static CSS missing (page is unstyled) | Either (a) dev server not running, (b) `STATIC_URL` mismatch, (c) the file isn't in `static/`. With `DEBUG = True` and `runserver`, Django serves `/static/` automatically. |
-| "fatal: your current branch 'master' does not have any commits yet" | Normal for a brand-new repo with no commits. Nothing to fix unless you intend to commit (see §14.5). |
-| Login form still won't log you in after edits | You replaced `views.login` but the URL still points to the old function, *or* the function name `login` shadows `django.contrib.auth.login`. Rename and re-save, then restart `runserver`. |
-
----
-
-## 19. Where to go next (beyond this tutorial)
-
-1. Make the `/login` page actually authenticate (§14.1) — use the working `user_add`
-   / `customer_add` views as a POST-handling reference.
-2. The `Login`, `seller`, and `buyer` models are already defined, migrated, and
-   registered in admin (§6.5, §15). Add a `Product` model next, then
-   `makemigrations` → `migrate` → register it in `admin.py`.
-3. Create a listing page that reads products with `Product.objects.all()` and
-   loops over them in a template with `{% for %}`.
-4. Add `{% url %}` links and `{% block %}` inheritance so `login.html` and
-   `about.html` extend `base.html`.
-5. Add `LOGIN_URL` / `LOGIN_REDIRECT_URL` settings and protect pages with
-   `@login_required`.
-6. Add a `requirements.txt` and a proper `.gitignore` (§14.3, §14.4).
-7. Refactor `user_add` / `customer_add` into `views_seller.py` / `views_buyer.py`
-   (the empty placeholder files exist for this purpose) and wire them through
-   `ecom_app/urls.py`.
-8. When ready, switch `DEBUG = False`, set `ALLOWED_HOSTS`, and serve with a real
-   WSGI server (Gunicorn) behind a reverse proxy — but that is a separate topic.
-
----
-
-## Quick reference recap — the 4 files that make each page
-
-Every time you build a new page, touch these *four* things (in order):
-
-1. `templates/NEW_PAGE.html` — write the HTML.
-2. `ecom_app/views.py` — add `def new_page(request): return render(request, 'NEW_PAGE.html')`.
-3. `ecom_app/urls.py` — add `path('new-page', views.new_page, name='new_page')`.
-4. (Optional) `ecom/settings.py` — add `LOGIN_URL = 'login'` once you need auth.
-
-Then **restart `runserver`** and visit `/new-page`.
-
----
-
-You now understand the whole project. The fastest path forward is:
+Every time you come back to work:
 
 ```powershell
 Set-Location "C:\Users\Faizy\PycharmProjects\E_Commerce_RE"
 . .venv\Scripts\Activate.ps1
-python manage.py migrate
-python manage.py createsuperuser
 python manage.py runserver
 ```
 
-Then open the browser to <http://127.0.0.1:8000/> and try the checklist in §17
-whenever you start a new terminal session.
+Then open <http://127.0.0.1:8000/>.

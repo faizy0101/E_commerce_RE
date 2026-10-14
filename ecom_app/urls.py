@@ -1,6 +1,6 @@
 from django.urls import path
 
-from ecom_app import views, views_admin
+from ecom_app import views, views_admin, views_buyer, views_seller
 
 urlpatterns=[
     path('',views.index,name='index'),
@@ -16,11 +16,14 @@ urlpatterns=[
 #     admin
     path('view_customers', views_admin.view_customers, name='view_customers'),
     path('update_customers/<int:id>',views_admin.update_customers, name='update_customers'),
-    path('delete_customers/<int:id>', views_admin.delete_customers, name='delete_customers')
+    path('delete_customers/<int:id>', views_admin.delete_customers, name='delete_customers'),
 
 
 #     customer
+    path('profile_buyer',views_buyer.profile_view, name='profile_buyer'),
 
 
 #     seller
+    path('profile_seller',views_seller.profile_view, name='profile_seller'),
+    path('update_seller_profile/<int:id>',views_seller.update_seller_profile, name='update_seller_profile'),
 ]

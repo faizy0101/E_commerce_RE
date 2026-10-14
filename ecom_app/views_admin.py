@@ -17,10 +17,10 @@ def update_customers(request,id):
             return redirect('view_customers')
     else:
         form=buyerform(instance=customers)
-    return render(request,'admin/customers.html',{'form':form})
+    return render(request,'admin/update.html',{'form':form})
 
 def delete_customers(request,id):
     customers=buyer.objects.get(id=id)
     customers.delete()
-    return render('admin/customers.html')
+    return redirect('view_customers')
 
