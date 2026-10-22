@@ -1,0 +1,75 @@
+{% extends 'buyer/product_base.html' %}
+{% load static %}
+{% block content %}
+<style>
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem;
+  }
+  .product-card {
+    border: 1px solid #ddd;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+  }
+  .product-card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 0.4rem;
+    margin-bottom: 0.75rem;
+  }
+  .product-card h5 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+  }
+  .product-card p {
+    margin: 0.25rem 0;
+    font-size: 0.9rem;
+    color: #555;
+  }
+  .product-card .price {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #111;
+    margin-top: auto;
+  }
+  .no-products {
+    padding: 2rem;
+    text-align: center;
+    color: #666;
+  }
+</style>
+
+<div class="container py-4">
+  <h2 class="mb-4">All Products</h2>
+  {% if products %}
+    <div class="product-grid">
+      {% for p in products %}
+        <div class="product-card">
+          {% if p.product_image %}
+            <img src="{{ p.product_image.url }}" alt="{{ p.product_name }}">
+          {% else %}
+            <img src="{% static 'assets/images/avatar.png' %}" alt="No image">
+          {% endif %}
+          <h5>{{ p.product_name }}</h5>
+          <p><strong>Description:</strong> {{ p.product_description }}</p>
+          <p><strong>Category:</strong> {{ p.product_category }}</p>
+          <p><strong>Price:</strong> <span class="price">${{ p.product_price }}</span></p>
+          <p><strong>Quantity:</strong> {{ p.product_quantity }}</p>
+          <a href="{% url 'open_product' p.id %}" type="button" class="btn btn-info">View Product</a>
+          <a href="{% url 'cart' p.id %}" type="button" class="btn btn-outline-warning" ">Add to cart</a>
+        </div>
+      {% endfor %}
+    </div>
+
+  {% else %}
+    <div class="no-products">No products available.</div>
+  {% endif %}
+</div>
+{% endblock %}

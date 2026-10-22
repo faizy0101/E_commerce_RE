@@ -1,0 +1,12 @@
+
+{% extends 'seller/seller_base.html' %}
+{% block content %}
+{%load crispy_forms_tags %}
+<form method="POST">
+    {% csrf_token %}
+    {{ form|crispy }}
+{{form}}
+    <br>
+    <button class="btn btn-info" type="submit">Save</button>
+    </form>
+{% endblock %}

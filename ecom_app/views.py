@@ -1,6 +1,6 @@
 from urllib import request
 
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm
 from django.core.mail import message
 from django.shortcuts import render, redirect
@@ -26,7 +26,7 @@ def login_view(request):
             if user.is_seller:
                 return redirect('seller_page')
             elif user.is_buyer:
-                return redirect('buyer_page')
+                return redirect('product_view_buyer')
             elif user.is_staff:
                 return redirect('admin_page')
         else:
@@ -37,9 +37,13 @@ def login_view(request):
 def seller_page(request):
     return render(request,'seller/seller_base.html')
 def buyer_page(request):
-    return render(request,'buyer/buyer_base.html')
+    return render(request,'buyer/product_base.html')
 def admin_page(request):
     return render(request,'admin/admin_base.html')
+def logout_view(request):
+    logout(request)
+    return redirect('login')
+
 #
 # def user_page(request):
 #     form=UserCreationForm()
@@ -76,3 +80,5 @@ def customer_add(request):
             user1.save()
             return redirect('login')
     return render(request,'customer_add.html',{'form1':form1,'form2':form2})
+
+

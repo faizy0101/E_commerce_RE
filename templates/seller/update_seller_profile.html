@@ -1,10 +1,20 @@
 {% extends 'seller/seller_base.html' %}
 {% block content %}
 
+{%load crispy_forms_tags %}
+
 <body>
 <label> Profile : {{seller_user}}</label>
+
+
+<form method="POST">
+    {% csrf_token %}
+    {{ form|crispy }}
 {{form}}
-<a class="btn btn-warning" href="{% url '' seller_user.id %}" type="button">Save</a>
+    <br>
+    <button class="btn btn-info" type="submit">Save</button>
+    </form>
 
 </body>
 {% endblock %}
+

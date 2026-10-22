@@ -5,7 +5,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spark Admin - Premium Bootstrap 5 Admin Dashboard Template</title>
+  <title>Spark Admin</title>
 
   <!-- SEO Optimization -->
   <meta name="description" content="Spark Admin - Premium Bootstrap 5 Admin Dashboard Template">
@@ -57,22 +57,22 @@
         <div class="sidebar-menu-title">Components</div>
         <ul class="sidebar-menu-list">
           <li class="sidebar-menu-item">
-            <a href=" {%  url 'view_customers' %} " class="sidebar-menu-link" id="menu-basictables" title="Basic Tables">
+            <a href="  " class="sidebar-menu-link" id="menu-basictables" title="Basic Tables">
               <i class="bi bi-table"></i>
               <span>Customers Tables</span>
 
             </a>
           </li>
           <li class="sidebar-menu-item">
-            <a href=" {% static 'ui-forms.html' %} " class="sidebar-menu-link" id="menu-uiforms" title="Forms and Input">
+            <a href="  " class="sidebar-menu-link" id="menu-uiforms" title="Forms and Input">
               <i class="bi bi-input-cursor-text"></i>
               <span>Forms & Input</span>
             </a>
           </li>
           <li class="sidebar-menu-item">
-            <a href=" {% static 'ui-buttons.html' %} " class="sidebar-menu-link" id="menu-uibuttons" title="Buttons">
+            <a href=" {%  url 'product_add' %} " class="sidebar-menu-link" id="menu-uibuttons" title="Buttons">
               <i class="bi bi-menu-button-wide-fill"></i>
-              <span>Buttons & Alerts</span>
+              <span>Add a Product</span>
             </a>
           </li>
         </ul>
@@ -83,9 +83,9 @@
         <div class="sidebar-menu-title">Pages</div>
         <ul class="sidebar-menu-list">
           <li class="sidebar-menu-item">
-            <a href=" {% static 'page-blank.html' %} " class="sidebar-menu-link" id="menu-blankpage" title="Blank Page">
+            <a href=" {% url 'product_view' %} " class="sidebar-menu-link" id="menu-blankpage" title="Blank Page">
               <i class="bi bi-file-earmark"></i>
-              <span>Blank Page</span>
+              <span>Product View</span>
             </a>
           </li>
           <li class="sidebar-menu-item">
@@ -237,7 +237,7 @@
             <li>
               <hr class="dropdown-divider">
             </li>
-            <li><a class="dropdown-item text-danger" href=" {% static 'page-login.html' %} "><i class="bi bi-box-arrow-right"></i>
+            <li><a class="dropdown-item text-danger" href=" {%  url 'logout' %} "><i class="bi bi-box-arrow-right"></i>
                 Logout</a></li>
           </ul>
         </div>

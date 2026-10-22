@@ -24,7 +24,7 @@
         <td>{{i.pincode}}</td>
         <td>{{i.address}}</td>
       <td><td><a class="btn btn-info" href="{% url 'update_customers' i.id %}" type="button">Update</a></td>
-                <td><a class="btn btn-danger" href="{% url 'delete_customers' i.id %}" type="button" onclick="return confirm('Are you sure you want to delete ?');">Delete</a></td>
+      <td><a class="btn btn-danger" href="{% url 'delete_customers' i.id %}" type="button" onclick="return confirm('Are you sure you want to delete ?');">Delete</a></td>
             </td>
     </tr>
 {% endfor %}
