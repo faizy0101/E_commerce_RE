@@ -1,920 +1,427 @@
-# Beginner Tutorial — `E_Commerce_RE`
+# Beginner Tutorial: E-Commerce Django Project
 
-A step-by-step guide written **like a teacher talking to you**.  
-Read a section, do exactly what it says, then move to the next.  
-By the end you will have a working Django e-commerce site — and you will understand **why**.
+This tutorial walks through the E-Commerce Django project task by task, chapter by chapter, sorted by creation order and difficulty (low to high).
 
----
+## Project Overview
 
-## Before you begin
+A Django-based e-commerce platform with three user roles:
+- **Admin** - manages customers, views all data
+- **Seller** - creates and manages products
+- **Buyer** - browses products, adds to cart, and checks out
 
-You should know **very little** about Django. If a word is unfamiliar, the tutorial
-explains it. Open a **PowerShell** window and keep it open for every step.
+## Directory Structure
 
-The project lives at:
+- ecom/ - Django project configuration (settings, urls, wsgi)
+- ecom_app/ - main application (models, views, forms, urls, migrations)
+- 	emplates/ - HTML templates for all user roles
+- static/ - CSS, JS, images
+- media/ - uploaded product images
+- db.sqlite3 - SQLite database (PostgreSQL config is commented out)
 
-```
-C:\Users\Faizy\PycharmProjects\E_Commerce_RE
-```
+## Chapters (sorted by difficulty - lowest first)
 
-All commands below are run **from that folder** (unless told otherwise).
+## Chapter 1: Project Setup & Django Configuration (Difficulty: Low)
 
----
+### What you will learn
+- How to set up a Django project
+- Configure project settings
+- Set up database and static/media files
 
-## Task 1 — Turn on the project
+### Files involved
+- ecom/settings.py
+- manage.py
+- main.py
 
-> Goal: see a blank Django page in your browser.
+### Key concepts
+- Django project structure
+- Settings: SECRET_KEY, DEBUG, ALLOWED_HOSTS, INSTALLED_APPS
+- Database configuration (PostgreSQL or SQLite)
+- Static files (STATIC_URL, STATICFILES_DIRS)
+- Media files (MEDIA_URL, MEDIA_ROOT)
 
-### 1.1 Activate your Python environment
+### Step by step
+1. Create a new Django project using django-admin startproject ecom
+2. Edit ecom/settings.py to configure your database
+3. Set up static and media file paths
+4. Add your app to INSTALLED_APPS
+5. Run migrations with python manage.py migrate
+6. Start the server with python manage.py runserver
 
-A *virtual environment* is like a box that holds its own Python + packages, so they
-don't clash with other projects. This project's box is called `.venv`.
-
-```powershell
-. .venv\Scripts\Activate.ps1
-```
-
-You will know it worked when the prompt changes to:
-
-```
-(.venv) PS C:\Users\Faizy\PycharmProjects\E_Commerce_RE>
-```
-
-### 1.2 Check you have the right tools
-
-```powershell
-python --version         # Python 3.13.15
-python -m django version # 6.1.1
-```
-
-### 1.3 Make sure PostgreSQL is running
-
-This project talks to **PostgreSQL**, not the tiny `db.sqlite3` file sitting in
-the folder. PostgreSQL must be **installed and running** with a database called
-`e_commerce_db`.
-
-Check:
-```powershell
-psql -U postgres -c "SELECT 1;"
-```
-If it asks for a password, enter `1234` (that is what `settings.py` expects).
-
-If the database doesn't exist yet:
-```powershell
-psql -U postgres -c "CREATE DATABASE e_commerce_db;"
-```
-
-### 1.4 Run the database migrations
-
-"Migrations" are Django's way of turning your `models.py` (which describes tables in
-Python) into **real tables** in PostgreSQL.
-
-```powershell
-python manage.py showmigrations
-```
-
-You will see `[ ]` on many lines — "not applied yet".
-
-Apply them:
-```powershell
-python manage.py migrate
-```
-
-Run `showmigrations` again — now the boxes are `[x]`.
-
-### 1.5 Start the web server
-
-```powershell
-python manage.py runserver
-```
-
-Leave that window running. In your browser go to:
-
-- <http://127.0.0.1:8000/> — you should see the **home page**.
-
-Press `Ctrl + C` in the terminal to stop the server when you are done.
-
-> 💡 From now on, whenever you want to work, open **two** windows: one for
-> `runserver`, one for typing commands. Always activate `.venv` first.
+### Code references
+- ecom/settings.py:33-43 - INSTALLED_APPS list
+- ecom/settings.py:79-94 - Database configuration
+- ecom/settings.py:128-135 - Static and media files
 
 ---
 
-## Task 2 — Create an admin account
+## Chapter 2: User Model & Authentication (Difficulty: Low-Medium)
 
-> Goal: log in to Django's built-in admin panel.
+### What you will learn
+- Create a custom user model
+- Create user registration forms
+- Implement login/logout functionality
 
-```powershell
-python manage.py createsuperuser
-```
+### Files involved
+- ecom_app/models.py - Login model
+- ecom_app/forms.py - loginform, buyerform, sellerform
+- ecom_app/views.py - login_view, logout_view, user_add, customer_add
+- 	emplates/login.html
+- 	emplates/user_add.html
+- 	emplates/customer_add.html
 
-Fill in:
-- **Username** → `admin`
-- **Email** → anything (e.g. `admin@example.com`)
-- **Password** → something strong like `MyP@ssw0rd!` (Django will reject
-  `password123`)
-- **Password (again)** → same thing.
+### Key concepts
+- AbstractUser for custom user model
+- UserCreationForm for registration
+- authenticate() and login() for authentication
+- Role-based user (is_seller, is_buyer)
 
-You can now log in at <http://127.0.0.1:8000/admin/> with `admin` / your password.
+### Step by step
+1. Create Login model extending AbstractUser in models.py:5
+2. Add is_seller and is_buyer boolean fields
+3. Create forms in orms.py:8-29
+4. Implement login_view in iews.py:19-36
+5. Create user_add view for seller registration in iews.py:52-66
+6. Create customer_add view for buyer registration in iews.py:68-82
+7. Create login.html template
+8. Create signup templates for both roles
 
----
-
-## Task 3 — Understand the project layout (read-only, 5 minutes)
-
-Before you touch any code, here is the map. Everything has a place and a reason.
-
-```
-E_Commerce_RE/
-├── .venv/              ← your Python box (do not edit)
-├── manage.py           ← the "do everything" script  (python manage.py ______)
-├── main.py             ← a leftover PyCharm file — IGNORE it
-│
-├── ecom/               ← the Django "project"  (settings, urls, wsgi)
-│   └── settings.py     ← ALL your config lives here
-│   └── urls.py         ← the master list of URLs
-│
-├── ecom_app/           ← the Django "app"  (your website code)
-│   └── models.py       ← database tables (Python classes)
-│   └── forms.py        ← forms that render HTML input fields
-│   └── views.py        ← main pages (index, login, signup, dashboards)
-│   └── views_admin.py  ← admin-side pages (manage buyers, CRUD)
-│   └── views_buyer.py  ← buyer-side pages (profile view)
-│   └── views_seller.py ← seller-side pages (profile view + edit)
-│   └── urls.py         ← this app's URL list
-│   └── admin.py        ← which models show up in /admin
-│   └── migrations/     ← saved history of your database changes
-│
-├── templates/          ← all your HTML files
-│   ├── index.html          ← the home page (property-listing theme)
-│   ├── login.html          ← the login page (styled, standalone)
-│   ├── user_add.html       ← seller signup page
-│   ├── customer_add.html   ← buyer signup page
-│   ├── user.html           ← leftover unused template — IGNORE it
-│   ├── base.html           ← leftover dashboard shell (only /base renders it)
-│   ├── seller/             ← seller dashboard templates
-│   │   └── seller_base.html            ← Spark Admin dashboard shell
-│   │   └── profile_view_seller.html    ← shows seller profile + Update link
-│   │   └── update_seller_profile.html  ← edit seller profile form
-│   ├── buyer/              ← buyer dashboard templates
-│   │   └── buyer_base.html            ← Spark Admin dashboard shell
-│   │   └── profile_view_buyer.html    ← shows buyer profile
-│   └── admin/              ← admin dashboard templates
-│       └── admin_base.html   ← Spark Admin dashboard shell
-│       └── customers.html    ← buyer CRUD table
-│       └── update.html       ← update buyer form
-│       └── delete.html       ← (placeholder, unused)
-│
-└── static/             ← CSS, JS, images, fonts
-    ├── css/            ← old stylesheets (login/index/signup still use css/style.css)
-    ├── js/             ← old JS (bootstrap, slider, aos, etc.)
-    ├── fonts/          ← icomoon / flaticon icon fonts
-    ├── images/         ← property photos, hero banners
-    ├── assets/         ← Spark Admin theme (dashboard CSS/JS/images)
-    │   ├── css/main.css
-    │   ├── js/dashboard.js
-    │   ├── libs/       ← bootstrap, apexcharts, flatpickr, etc.
-    │   └── images/     ← avatar, favicon.ico, etc.
-    └── favicon.png     ← site icon (may be missing — see §10.8)
-```
-
-**Two names to remember:**
-- `ecom` = the **project** (settings, master URLs)
-- `ecom_app` = the **app** (models, forms, views, app URLs)
+### Code references
+- ecom_app/models.py:5-8 - Login model
+- ecom_app/forms.py:8-11 - loginform
+- ecom_app/views.py:19-36 - login_view
+- ecom_app/views.py:52-66 - user_add (seller)
+- ecom_app/views.py:68-82 - customer_add (buyer)
 
 ---
 
-## Task 4 — Build the signup flow (models → forms → views → urls → templates)
+## Chapter 3: Database Models - Core Entities (Difficulty: Medium)
 
-> Goal: a visitor can **sign up** as a seller or buyer, then **log in**, and get
-> redirected to their own dashboard.
+### What you will learn
+- Design database models for e-commerce
+- Define relationships between models
+- Create and apply migrations
 
-This is the most important task. It touches every part of Django.  
-We go **bottom-up**: database → form → view → URL → template.
+### Files involved
+- `ecom_app/models.py`
+- `ecom_app/migrations/0001_initial.py` through `0006_cart_quantity.py`
 
-### 4.1 The database tables (`models.py`)
+### Key concepts
+- OneToOneField, ForeignKey
+- Model field types (CharField, EmailField, DecimalField, ImageField)
+- Migration workflow
+- Model __str__ method
 
-Open `ecom_app/models.py`. You will see three classes:
+### Step by step
+1. Create Login model (Chapter 2 already covers this)
+2. Create buyer model in models.py:10-18 with OneToOneField to Login
+3. Create seller model in models.py:20-28 with OneToOneField to Login
+4. Create product model in models.py:31-38 with ForeignKey to seller
+5. Run `python manage.py makemigrations` and `python manage.py migrate`
+6. Later add cart model in models.py:40-43
+7. Add quantity field to cart via migration 0006_cart_quantity.py
 
-```python
-class Login(AbstractUser):           # the user account (username + password)
-    is_seller = models.BooleanField(default=False)
-    is_buyer  = models.BooleanField(default=False)
+### Model Relationships
+- Login 1-to-1 -> buyer
+- Login 1-to-1 -> seller
+- seller 1-to-many -> product
+- buyer 1-to-many -> cart
+- product 1-to-many -> cart
 
-class seller(models.Model):          # extra info for a seller
-    user = models.OneToOneField(Login, on_delete=models.CASCADE)
-    name = ...
-    email = ...
-    phone = ...
-    location = ...
-    tax_number = ...
-
-class buyer(models.Model):           # extra info for a buyer
-    user = models.OneToOneField(Login, on_delete=models.CASCADE)
-    name = ...
-    email = ...
-    phone = ...
-    pincode = ...
-    address = ...
-```
-
-**What this means:**
-- `Login` is the **user model** — it extends Django's `AbstractUser` (gives you
-  username + password for free) and adds two yes/no flags (`is_seller`, `is_buyer`).
-- `seller` and `buyer` are **profile** tables — each stores one extra record per
-  user, linked by `OneToOneField` (one user → one seller profile, one user → one buyer profile).
-- `settings.py` says `AUTH_USER_MODEL = 'ecom_app.Login'`, so Django uses this
-  `Login` class everywhere instead of the default `User`.
-
-> ✅ You do **not** need to change the models. They are already correct.
-
-### 4.2 The forms (`forms.py`)
-
-Open `ecom_app/forms.py`:
-
-```python
-class loginform(UserCreationForm):     # signup form (username + 2 password fields)
-    class Meta:
-        model = Login
-        fields = ('username', 'password1', 'password2')
-
-class sellerform(forms.ModelForm):     # seller profile form
-    class Meta:
-        model = seller
-        fields = '__all__'
-        exclude = ("user",)           # the view sets this manually
-
-class buyerform(forms.ModelForm):       # buyer profile form
-    class Meta:
-        model = buyer
-        fields = '__all__'
-        exclude = ("user",)           # the view sets this manually
-```
-
-**What this means:**
-- `loginform` uses `UserCreationForm` — Django auto-creates the two password
-  fields and **hashes** the password when saving. It is tied to the custom `Login`
-  model (not the default `User`).
-- `sellerform` / `buyerform` are `ModelForm`s — Django reads your `seller` / `buyer`
-  model and builds a form field for each database column.
-- `exclude = ("user",)` tells Django: "don't show the `user` field on the form —
-  the view will link it to the right user behind the scenes."
-
-> ✅ You do **not** need to change the forms. They are already correct.
-
-### 4.3 The views (`views.py`)
-
-Open `ecom_app/views.py` and look at these key functions:
-
-#### `login_view` — logs a user in
-
-```python
-def login_view(request):
-    if request.method == "POST":           # the user clicked "Log In"
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        user = authenticate(request, username=username, password=password)
-        if user is not None:               # password matched!
-            login(request, user)
-            if user.is_seller:
-                return redirect('seller_page')
-            elif user.is_buyer:
-                return redirect('buyer_page')
-            elif user.is_staff:
-                return redirect('admin_page')
-        else:
-            print('invalid creds...')      # wrong password — see the bug note below
-    else:                                  # the user just opened the page
-        return render(request, 'login.html')
-```
-
-This is the **real** auth flow. It:
-1. Reads `username` and `password` from the submitted form.
-2. Calls `authenticate()` — Django checks the password hash.
-3. Calls `login()` — Django stores the user ID in a session cookie.
-4. **Redirects** to the right dashboard based on `is_seller` / `is_buyer` / `is_staff`.
-
-> ⚠️ **Bug to fix later:** when the password is wrong, the function prints a message
-> but returns nothing → Django throws a 500 error. The fix is to `return render(...)`
-> or `return redirect('login')` after the `print`. (See §10.1.)
-
-#### `user_add` — signs up a seller
-
-```python
-def user_add(request):
-    form1 = loginform()      # the loginform (username + passwords)
-    form2 = sellerform()     # the sellerform (name, email, phone, etc.)
-    if request.method == "POST":
-        form1 = loginform(request.POST)
-        form2 = sellerform(request.POST)
-        if form1.is_valid() and form2.is_valid():
-            user_data = form1.save(commit=False)  # don't save yet
-            user_data.is_seller = True             # mark this user as a seller
-            user_data.save()                       # NOW save to the database
-            user1 = form2.save(commit=False)       # don't save yet
-            user1.user = user_data                 # link seller profile to the user
-            user1.save()                           # NOW save to the database
-            return redirect('login')              # go to the login page
-    return render(request, 'user_add.html', {'form1': form1, 'form2': form2})
-```
-
-**The pattern:**
-1. Create **two** forms — one for the user account, one for the profile.
-2. On `POST`, fill both from `request.POST` (the submitted data).
-3. If both are valid: save the user first, set the flag (`is_seller`), then link
-   the profile and save it.
-4. Redirect to login.
-
-#### `customer_add` — signs up a buyer
-
-This is **identical** to `user_add`, except:
-- It uses `buyerform` instead of `sellerform`.
-- It sets `user_data.is_buyer = True`.
-
-#### `seller_page`, `buyer_page`, `admin_page`
-
-These are the dashboards shown **after login**:
-
-```python
-def seller_page(request):
-    return render(request, 'seller/seller_base.html')
-
-def buyer_page(request):
-    return render(request, 'buyer/buyer_base.html')
-
-def admin_page(request):
-    return render(request, 'admin/admin_base.html')
-```
-
-> ⚠️ There are **two** `admin_page` functions in the file. The second one (the
-> one that renders `admin/admin_base.html`) wins. The first one (renders `base.html`)
-> is dead code. Rename the first one later (see §10.2).
-
-### 4.4 The URLs (`urls.py`)
-
-Every page needs a **URL**. Open `ecom_app/urls.py`:
-
-```python
-from django.urls import path
-from ecom_app import views, views_admin, views_buyer, views_seller
-
-urlpatterns = [
-    path('', views.index, name='index'),              # /         → home
-    path('base', views.admin_page, name='base'),      # /base     → Spark Admin dashboard shell
-    path('login', views.login_view, name='login'),    # /login    → login
-    path('user_add', views.user_add, name='user_add'),# /user_add → seller signup
-    path('customer_add', views.customer_add, name='customer_add'), # buyer signup
-    path('seller_page', views.seller_page, name='seller_page'),
-    path('buyer_page', views.buyer_page, name='buyer_page'),
-    path('admin_page', views.admin_page, name='admin_page'),
-
-    # admin-side routes
-    path('view_customers', views_admin.view_customers, name='view_customers'),
-    path('update_customers/<int:id>', views_admin.update_customers, name='update_customers'),
-    path('delete_customers/<int:id>', views_admin.delete_customers, name='delete_customers'),
-
-    # customer (buyer) routes
-    path('profile_buyer', views_buyer.profile_view, name='profile_buyer'),
-
-    # seller routes
-    path('profile_seller', views_seller.profile_view, name='profile_seller'),
-    path('update_seller_profile/<int:id>', views_seller.update_seller_profile, name='update_seller_profile'),
-]
-```
-
-**Each line means:**
-```
-path('the url after 127.0.0.1:8000/', which-function-handles-it, name='short-label')
-```
-
-The **`name=`** is important — in your HTML you use `{% url 'login' %}` instead of
-hard-coding `/login`. This way, if you change the URL later, the link updates
-automatically.
-
-The routes fall into three groups:
-- **Core** (`/`, `/login`, `/user_add`, `/customer_add`, `/seller_page`, `/buyer_page`, `/admin_page`) — handled by `views.py`.
-- **Admin CRUD** (`/view_customers`, `/update_customers/<id>`, `/delete_customers/<id>`) — handled by `views_admin.py`.
-- **Profile pages** (`/profile_buyer`, `/profile_seller`, `/update_seller_profile/<id>`) — handled by `views_buyer.py` and `views_seller.py` (covered in Task 5b).
-
-### 4.5 The templates (HTML)
-
-#### `login.html`
-
-A standalone page (own `<head>`, own CSS, own JS). The form posts to itself:
-
-```html
-<form action="#" method="post" class="login-form">
-  {% csrf_token %}
-  <input type="text" id="username" name="username" />
-  <input type="password" id="password" name="password" />
-  <button type="submit">Log In</button>
-</form>
-```
-
-- `{% csrf_token %}` is Django's anti-forgery token — **required** on every POST form.
-- `name="username"` and `name="password"` are what `login_view` reads.
-
-#### `user_add.html` (seller signup)
-
-```html
-{% load crispy_forms_tags %}
-<form action="#" method="post" class="signup-form">
-  {% csrf_token %}
-  {{ form1|crispy }}    {{ form2|crispy }}
-  <button type="submit">Sign Up</button>
-</form>
-```
-
-- `{{ form1|crispy }}` renders the `loginform` with nice Bootstrap markup (thanks to
-  `crispy_forms` + `crispy_bootstrap5` from `settings.py`).
-- The view passes `form1` and `form2` in a context dictionary.
-
-#### `customer_add.html` (buyer signup)
-
-Same structure, but renders `loginform` + `buyerform`.
-
-### 4.6 Try it end-to-end
-
-With `runserver` running, do this in your browser:
-
-1. Go to <http://127.0.0.1:8000/user_add> — sign up a **seller** (username: `alice`,
-   password: `TestP@ss1!`).
-2. Go to <http://127.0.0.1:8000/login> — log in as `alice`.
-   → You land on <http://127.0.0.1:8000/seller_page> (the seller dashboard).
-3. Go to <http://127.0.0.1:8000/customer_add> — sign up a **buyer** (username: `bob`).
-4. Log in as `bob` → you land on <http://127.0.0.1:8000/buyer_page>.
-5. Log in as your **admin** (from Task 2) → you land on <http://127.0.0.1:8000/admin_page>.
-
-**That's the full signup → login → redirect cycle.** It works.
+### Code references
+- `ecom_app/models.py:10-18` - buyer model
+- `ecom_app/models.py:20-28` - seller model
+- `ecom_app/models.py:31-38` - product model
+- `ecom_app/models.py:40-43` - cart model
+- `ecom_app/migrations/0001_initial.py` - initial migrations
+- `ecom_app/migrations/0002_product.py` - product model added
+- `ecom_app/migrations/0003_product_product_image.py` - image field added
+- `ecom_app/migrations/0004_cart.py` - cart model created
+- `ecom_app/migrations/0005_remove_cart_seller_cart_buyer.py` - cart buyer added
+- `ecom_app/migrations/0006_cart_quantity.py` - quantity field added
 
 ---
 
-## Task 5 — The admin CRUD (manage buyers in a table)
+## Chapter 4: Django Forms (Difficulty: Medium)
 
-> Goal: the admin can list, edit, and delete buyers from a table.
+### What you will learn
+- Create ModelForms for different user roles
+- Use crispy-forms for better rendering
+- Handle form validation and file uploads
 
-### 5.1 The views (`views_admin.py`)
+### Files involved
+- `ecom_app/forms.py`
+- Templates that render forms
 
-```python
-def view_customers(request):
-    customers = buyer.objects.all()               # grab every buyer
-    return render(request, 'admin/customers.html', {'customers': customers})
+### Key concepts
+- ModelForm vs Form
+- exclude fields from form
+- crispy_forms rendering
+- FileField and ImageField handling
 
-def update_customers(request, id):
-    customers = buyer.objects.get(id=id)           # find one buyer
-    if request.method == "POST":
-        form = buyerform(request.POST, instance=customers)
-        if form.is_valid():
-            form.save()
-            return redirect('view_customers')
-    else:
-        form = buyerform(instance=customers)       # pre-fill with existing data
-    return render(request, 'admin/update.html', {'form': form})  # renders the edit form page
+### Step by step
+1. Create loginform in forms.py:8-11 (UserCreationForm)
+2. Create buyerform in forms.py:13-17 (ModelForm, exclude user)
+3. Create sellerform in forms.py:19-23 (ModelModel, exclude user)
+4. Create productform in forms.py:25-29 (ModelForm, exclude seller)
+5. Load crispy_forms_tags in templates
+6. Render forms with `{{ form|crispy }}`
 
-def delete_customers(request, id):
-    customers = buyer.objects.get(id=id)
-    customers.delete()
-    return redirect('view_customers')   # ← already fixed! (see §10.3)
-```
-
-**Pattern:**
-- `view_customers` — `Model.objects.all()` → pass to template → `{% for %}` loop.
-- `update_customers` — `Model.objects.get(id=id)` → `Form(instance=obj)` to
-  pre-fill → on POST, `Form(request.POST, instance=obj)` → `form.save()`.
-- `delete_customers` — `Model.objects.get(id=id)` → `.delete()`.
-
-### 5.2 The URLs
-
-Already wired in `ecom_app/urls.py` (see §4.4):
-
-```python
-path('view_customers', views_admin.view_customers, name='view_customers'),
-path('update_customers/<int:id>', views_admin.update_customers, name='update_customers'),
-path('delete_customers/<int:id>', views_admin.delete_customers, name='delete_customers'),
-```
-
-`<int:id>` captures a number from the URL and passes it to the view.
-
-### 5.3 The template (`admin/customers.html`)
-
-```django
-{% extends 'admin/admin_base.html' %}
-{% block content %}
-  <table class="table table-dark">
-    <thead>
-      <tr>
-        <th scope="col">No.</th>
-        <th scope="col">Name</th>
-        <th scope="col">Email</th>
-        <th scope="col">Phone</th>
-        <th scope="col">Pincode</th>
-        <th scope="col">Address</th>
-        <th scope="col" colspan="2">Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-    {% for i in customers %}
-      <tr>
-        <td>{{ forloop.counter }}</td>
-        <td>{{ i.name }}</td>
-        <td>{{ i.email }}</td>
-        <td>{{ i.phone }}</td>
-        <td>{{ i.pincode }}</td>
-        <td>{{ i.address }}</td>
-        <td><a class="btn btn-info" href="{% url 'update_customers' i.id %}">Update</a></td>
-        <td><a class="btn btn-danger" href="{% url 'delete_customers' i.id %}" onclick="return confirm('Are you sure you want to delete?');">Delete</a></td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-{% endblock %}
-```
-
-- `{% extends 'admin/admin_base.html' %}` — inherits the Spark Admin dashboard shell.
-- `<thead>` / `<tbody>` — proper table structure with `table table-dark` Bootstrap classes.
-- `{{ forloop.counter }}` — auto-numbered row (1, 2, 3, …).
-- `{{ i.name }}`, `{{ i.email }}`, etc. — shows each buyer's fields.
-- `<a class="btn btn-info">` / `<a class="btn btn-danger">` — Bootstrap styled buttons.
-- `{% url 'update_customers' i.id %}` — builds the URL `/update_customers/3`.
-- `onclick="return confirm(...)"` — asks the admin before deleting.
-
-### 5.4 Try it
-
-1. Sign up a few buyers at `/customer_add` (Task 4).
-2. Go to <http://127.0.0.1:8000/view_customers> — you see a table of all buyers.
-3. Click **Update** → fix a phone number → submit → redirected back to the table.
-4. Click **Delete** → the buyer is removed from the table.
+### Code references
+- `ecom_app/forms.py:8-11` - loginform
+- `ecom_app/forms.py:13-17` - buyerform
+- `ecom_app/forms.py:19-23` - sellerform
+- `ecom_app/forms.py:25-29` - productform
+- `templates/user_add.html:185-188` - form rendering
+- `templates/customer_add.html:185-188` - form rendering
 
 ---
 
-## Task 5b — Profile pages (buyer view, seller view + edit)
+## Chapter 5: URL Routing & Views Structure (Difficulty: Medium)
 
-> Goal: after logging in, the user can visit their own profile page and (for
-> sellers) edit their profile.
+### What you will learn
+- Organize views by user role
+- Set up URL patterns
+- Create view functions for each page
 
-This feature is split across **two new view files** that mirror the CRUD pattern
-in `views_admin.py`.
+### Files involved
+- `ecom_app/urls.py`
+- `ecom_app/views.py`
+- `ecom_app/views_buyer.py`
+- `ecom_app/views_seller.py`
+- `ecom_app/views_admin.py`
 
-### 5b.1 The buyer profile (`views_buyer.py`)
+### Key concepts
+- path() with parameters
+- URL namespacing
+- View separation by role
+- redirect() vs render()
 
-```python
-def profile_view(request):
-    userdata = request.user                   # the currently logged-in user
-    buyer_user = buyer.objects.get(user=userdata)   # find this user's buyer profile
-    return render(request, 'buyer/profile_view_buyer.html', {'buyer_user': buyer_user})
-```
+### Step by step
+1. Set up main urls in ecom/urls.py:22-25 to include app urls
+2. Create app urls in ecom_app/urls.py:5-41
+3. Create base views in views.py:12-84 (index, login, register)
+4. Create buyer views in views_buyer.py:6-86
+5. Create seller views in views_seller.py:8-61
+6. Create admin views in views_admin.py:7-26
 
-- **Pattern:** read `request.user` → look up the matching `buyer` record via the
-  `OneToOneField` → pass it to the template.
+### URL Structure
+- `ecom_app/urls.py:6` - index (home page)
+- `ecom_app/urls.py:8-10` - login/logout
+- `ecom_app/urls.py:18-20` - admin customer management
+- `ecom_app/urls.py:24-31` - buyer features
+- `ecom_app/urls.py:34-40` - seller features
 
-### 5b.2 The seller profile + edit (`views_seller.py`)
-
-```python
-def profile_view(request):
-    userdata = request.user
-    seller_user = seller.objects.get(user=userdata)
-    return render(request, 'seller/profile_view_seller.html', {'seller_user': seller_user})
-
-def update_seller_profile(request, id):
-    seller_user = seller.objects.get(id=id)
-    if request.method == "POST":
-        form = sellerform(request.POST, instance=seller_user)
-        if form.is_valid():
-            form.save()
-            return redirect('profile_seller')     # back to the profile page
-    else:
-        form = sellerform(instance=seller_user)   # pre-fill with existing data
-    return render(request, 'seller/update_seller_profile.html', {'form': form})
-```
-
-- `profile_view` is the same pattern as the buyer view — just for `seller`.
-- `update_seller_profile` follows the same edit-then-redirect pattern as
-  `update_customers` in §5.1: `instance=obj` pre-fills, `form.save()` persists,
-  then redirect back to the profile page.
-
-> ⚠️ **Bug to fix later:** `update_seller_profile.html` has a broken URL tag —
-> `{% url '' seller_user.id %}` (empty name). It should point to the correct
-> route. See §10.10.
-
-### 5b.3 The template — buyer profile (`buyer/profile_view_buyer.html`)
-
-```django
-{% extends 'buyer/buyer_base.html' %}
-{% block content %}
-  <label>Name: {{ buyer_user.name }}</label>
-  <label>Email: {{ buyer_user.email }}</label>
-  <label>Phone: {{ buyer_user.phone }}</label>
-  <label>Pincode: {{ buyer_user.pincode }}</label>
-  <label>Address: {{ buyer_user.address }}</label>
-{% endblock %}
-```
-
-### 5b.4 The template — seller profile (`seller/profile_view_seller.html`)
-
-```django
-{% extends 'seller/seller_base.html' %}
-{% block content %}
-  {{ seller_user }}
-  <label>Name: {{ seller_user.name }}</label>
-  <label>Email: {{ seller_user.email }}</label>
-  <label>Phone: {{ seller_user.phone }}</label>
-  <label>Location: {{ seller_user.location }}</label>
-  <label>Tax Number: {{ seller_user.tax_number }}</label>
-  <a class="btn btn-info" href="{% url 'update_seller_profile' seller_user.id %}">Update</a>
-{% endblock %}
-```
-
-### 5b.5 The template — seller edit form (`seller/update_seller_profile.html`)
-
-```django
-{% extends 'seller/seller_base.html' %}
-{% block content %}
-  <label> Profile : {{ seller_user }}</label>
-  {{ form }}
-{% endblock %}
-```
-
-> ⚠️ **Bug to fix later:** this template renders `{{ form }}` as raw HTML and has
-> no `<form>` tag or submit button. It should wrap `{{ form }}` in a proper
-> `<form method="post">` with `{% csrf_token %}`. See §10.10.
-
-### 5b.6 The dashboard shells
-
-All three dashboard base templates (`admin/admin_base.html`, `buyer/buyer_base.html`,
-`seller/seller_base.html`) share the **"Spark Admin"** design — a Bootstrap 5
-dashboard theme with a sidebar, top navbar, and footer. They are nearly identical;
-each extends its role-specific base and fills `{% block content %}`.
-
-The buyer shell links **My Account** → `{% url 'profile_buyer' %}`, and the seller
-shell links **My Account** → `{% url 'profile_seller' %}`.
-
-### 5b.7 Try it
-
-1. Sign up a seller at `/user_add`, log in, and get redirected to `/seller_page`.
-2. In the seller dashboard's profile dropdown, click **My Account** → you land on
-   `/profile_seller` and see your profile.
-3. Click **Update** → fill in the form → submit → redirected back to the profile.
-4. Sign up a buyer at `/customer_add`, log in → `/buyer_page` → **My Account** →
-   `/profile_buyer`.
+### Code references
+- `ecom_app/urls.py:5-41` - all URL patterns
+- `ecom_app/views.py:12-84` - base views
+- `ecom_app/views_buyer.py:6-86` - buyer views
+- `ecom_app/views_seller.py:8-61` - seller views
+- `ecom_app/views_admin.py:7-26` - admin views
 
 ---
 
-## Task 6 — Django's built-in admin panel (`/admin/`)
+## Chapter 6: Seller Features - Product Management (Difficulty: Medium-High)
 
-You get a professional admin interface **for free**.
+### What you will learn
+- Create, read, update, delete products
+- Handle file uploads
+- Filter products by seller
+- Build seller dashboard
 
-Remember in Task 2 you ran `createsuperuser`? That same account logs into Django's
-built-in admin at <http://127.0.0.1:8000/admin/>.
+### Files involved
+- `ecom_app/views_seller.py`
+- `templates/seller/` templates
 
-`ecom_app/admin.py` registers all three models:
+### Key concepts
+- CRUD operations
+- request.FILES for image upload
+- commit=False for setting foreign keys
+- Filtering querysets
 
-```python
-admin.site.register(Login)
-admin.site.register(seller)
-admin.site.register(buyer)
-```
+### Step by step
+1. Create profile_view in views_seller.py:8-11 to show seller profile
+2. Create update_seller_profile in views_seller.py:14-23 for profile editing
+3. Create product_create in views_seller.py:26-38 to add products
+4. Create product_view in views_seller.py:40-44 to list seller's products
+5. Create product_update in views_seller.py:47-56 to edit products
+6. Create product_delete in views_seller.py:58-61 to remove products
+7. Create templates: seller_base.html, add_product.html, product_view.html, product_update.html, profile_view_seller.html, update_seller_profile.html
 
-So when you log in to `/admin/` you can add, edit, and delete **Login**, **seller**,
-and **buyer** records right from the browser — no code needed.
-
----
-
-## Task 7 — Make your first small change (and see it live)
-
-> Goal: prove the request → view → template chain by editing text.
-
-1. Keep `runserver` running.
-2. Open `templates/login.html`.
-3. Find:
-   ```html
-   <h1 class="login-title">Welcome back</h1>
-   ```
-4. Change to:
-   ```html
-   <h1 class="login-title">Welcome back — I edited this!</h1>
-   ```
-5. Save the file.
-6. Refresh <http://127.0.0.1:8000/login>.
-
-You see your new text. ✅
-
-> **Note:** HTML/CSS changes auto-reload. **Python** changes (`.py` files) require
-> you to **stop + restart** `runserver`.
+### Code references
+- `ecom_app/views_seller.py:8-11` - profile_view
+- `ecom_app/views_seller.py:14-23` - update_seller_profile
+- `ecom_app/views_seller.py:26-38` - product_create
+- `ecom_app/views_seller.py:40-44` - product_view
+- `ecom_app/views_seller.py:47-56` - product_update
+- `ecom_app/views_seller.py:58-61` - product_delete
 
 ---
 
-## Task 8 — Add your own page (build from nothing)
+## Chapter 7: Buyer Features - Shopping Cart (Difficulty: Medium-High)
 
-> Goal: a new page at `/about` that you create yourself.
+### What you will learn
+- Implement shopping cart functionality
+- Add/remove items from cart
+- Update item quantities
+- Calculate totals
 
-Follow the **4-file recipe** every time:
+### Files involved
+- `ecom_app/views_buyer.py`
+- `templates/buyer/` templates
 
-| Step | File | What to do |
-|---|---|---|
-| 1 | `templates/about.html` | Write the HTML. |
-| 2 | `ecom_app/views.py` | Add `def about(request): return render(request, 'about.html')`. |
-| 3 | `ecom_app/urls.py` | Add `path('about', views.about, name='about')`. |
-| 4 | (restart `runserver`) | Visit <http://127.0.0.1:8000/about>. |
+### Key concepts
+- Session-based cart vs database cart
+- Foreign key relationships
+- Aggregation and calculations
+- Redirect after actions
 
-**Template (`templates/about.html`):**
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>About</title>
-</head>
-<body>
-  <h1>About this site</h1>
-  <p>Built by following the beginner tutorial.</p>
-  <a href="{% url 'index' %}">Back to home</a>
-</body>
-</html>
-```
+### Step by step
+1. Create Cart view in views_buyer.py:20-28 to add items to cart
+2. Create Cart_view in views_buyer.py:32-44 to display cart and calculate total
+3. Create product_delete_from_cart in views_buyer.py:46-49 to remove items
+4. Create increase_quantity in views_buyer.py:51-58 to increment quantity
+5. Create decrease_quantity in views_buyer.py:60-65 to decrement quantity
+6. Create templates: product_base.html, product_card_list.html, cart_page.html, open_product_page.html
 
----
+### Cart Logic
+- Cart items stored in database with buyer, product, quantity
+- Total calculated by iterating cart items
+- Quantity validation against product stock
 
-## Task 9 — Common commands (cheat sheet)
-
-Run these from the project root **with `.venv` activated**:
-
-| Command | What it does |
-|---|---|
-| `python manage.py runserver` | start the dev server (Ctrl+C to stop) |
-| `python manage.py migrate` | build/update database tables from `models.py` |
-| `python manage.py makemigrations` | tell Django you changed `models.py` |
-| `python manage.py createsuperuser` | make an admin account |
-| `python manage.py changepassword USER` | reset a user's password |
-| `python manage.py shell` | open a Python prompt with Django loaded |
-| `python manage.py test` | run `tests.py` |
-| `python manage.py showmigrations` | see which tables are built |
-| `python manage.py check` | run Django's self-diagnostics |
+### Code references
+- `ecom_app/views_buyer.py:20-28` - Cart (add to cart)
+- `ecom_app/views_buyer.py:32-44` - Cart_view
+- `ecom_app/views_buyer.py:46-49` - product_delete_from_cart
+- `ecom_app/views_buyer.py:51-58` - increase_quantity
+- `ecom_app/views_buyer.py:60-65` - decrease_quantity
+- `templates/buyer/cart_page.html:1-133` - cart display
 
 ---
 
-## Task 10 — Things to fix (the bugs a beginner misses)
+## Chapter 8: Buyer Features - Product Browsing & Checkout (Difficulty: Medium)
 
-These are real problems in the code. They don't stop the site from running, but
-they will bite you later.
+### What you will learn
+- Display products in a grid
+- Create product detail pages
+- Implement checkout flow
 
-### 10.1 `login_view` returns nothing on bad password
+### Files involved
+- `ecom_app/views_buyer.py`
+- `templates/buyer/` templates
 
-When `authenticate()` returns `None` (wrong password), the function prints a
-message and **falls through without returning anything**. Django shows a 500 error.
+### Key concepts
+- QuerySet filtering
+- Detail views with URL parameters
+- Checkout flow
 
-**Fix:** at the end of the `if request.method == "POST"` block, after the
-`else:` branch, add:
+### Step by step
+1. Create profile_view in views_buyer.py:6-9 for buyer profile
+2. Create product_view_buyer in views_buyer.py:12-14 to list all products
+3. Create open_product in views_buyer.py:16-18 for product details
+4. Create checkout in views_buyer.py:68-86 (currently incomplete)
+5. Create templates: profile_view_buyer.html, product_card_list.html, open_product_page.html, checkout.html
 
-```python
-    return render(request, 'login.html')   # show login again, with no error message yet
-```
-
-### 10.2 Two `admin_page` functions in `views.py`
-
-There are two definitions. The second one wins. Rename the first to
-`dashboard_page` and update `urls.py`:
-
-```python
-def dashboard_page(request):
-    return render(request, 'base.html')
-```
-```python
-path('base', views.dashboard_page, name='base'),
-```
-
-### 10.3 `delete_customers` is missing `request`  *(already fixed!)*
-
-The original bug was that `delete_customers` returned `render('admin/customers.html')`
-without the `request` object — a crash. The code in `views_admin.py` now correctly
-returns:
-
-```python
-def delete_customers(request, id):
-    customers = buyer.objects.get(id=id)
-    customers.delete()
-    return redirect('view_customers')
-```
-
-No action needed — this one is already fixed.
-
-### 10.4 `MAILERS` is not a real Django setting
-
-In `settings.py` the email configuration uses `MAILERS` (the syntax from the
-`django-mailer` package), but Django's built-in email system ignores it:
-
-```python
-MAILERS = {
-    'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
-    }
-}
-```
-
-Django expects a top-level `EMAIL_BACKEND` setting instead. Change to:
-
-```python
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-```
-
-### 10.5 No `requirements.txt`
-
-To make the project reproducible on another machine:
-
-```powershell
-python -m pip freeze > requirements.txt
-```
-
-Then on a new machine:
-```powershell
-python -m venv .venv
-. .venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-```
-> Don't forget `psycopg2-binary` and `crispy-bootstrap5`.
-
-### 10.6 No `.gitignore` at the project root
-
-Add a file `E_Commerce_RE/.gitignore`:
-```
-__pycache__/
-*.pyc
-*.pyo
-.venv/
-*.sqlite3
-```
-
-### 10.7 Broken links in `index.html`
-
-The navbar uses `{% static 'index.html' %}`, `{% static 'properties.html' %}`, etc.
-— those files don't exist. They produce 404s. Change them to real URLs or remove them.
-
-### 10.8 Missing `favicon.png`
-
-`login.html` and `index.html` reference `{% static 'favicon.png' %}` but the file
-doesn't exist. Either add one to `static/` or remove the `<link rel="shortcut icon">` line.
-
-### 10.9 Unused / incorrect imports in `views.py`
-
-At the top of `ecom_app/views.py`:
-
-```python
-from urllib import request            # ← wrong — `urllib.request` is a stdlib module, not a Django request
-from django.core.mail import message   # ← wrong — `message` is not exported from django.core.mail
-```
-
-Neither is used anywhere in the file. They won't crash the app (Python just loads
-unused names), but they are misleading. Remove both lines.
-
-### 10.10 `update_seller_profile.html` is missing a `<form>` wrapper
-
-The template in `templates/seller/update_seller_profile.html` renders `{{ form }}`
-as raw HTML with no `<form>` tag, no `{% csrf_token %}`, and no submit button.
-Additionally, the Save link uses a broken URL tag: `{% url '' seller_user.id %}`
-(empty name → `NoReverseMatch`).
-
-**Fix:** wrap the form properly:
-
-```django
-{% extends 'seller/seller_base.html' %}
-{% block content %}
-  <form method="post">
-    {% csrf_token %}
-    {{ form }}
-    <button type="submit">Save</button>
-  </form>
-{% endblock %}
-```
+### Code references
+- `ecom_app/views_buyer.py:6-9` - profile_view
+- `ecom_app/views_buyer.py:12-14` - product_view_buyer
+- `ecom_app/views_buyer.py:16-18` - open_product
+- `ecom_app/views_buyer.py:68-86` - checkout (incomplete)
+- `templates/buyer/product_card_list.html:1-75` - product grid
+- `templates/buyer/open_product_page.html:1-84` - product detail
 
 ---
 
-## Task 11 — Where to go next
+## Chapter 9: Admin Features - Customer Management (Difficulty: Medium)
 
-Now you understand every piece. Here is the logical next step for each part:
+### What you will learn
+- Build admin dashboard
+- View all customers
+- Update and delete customer records
 
-1. **Models** — add a `Product` model, run `makemigrations` + `migrate`, register it
-   in `admin.py`.
-2. **Views** — make the buyer/seller dashboards show real data (products, orders,
-   etc.) instead of being empty shells. Add profile pages for buyers (mirror the
-   seller pattern in `views_buyer.py`).
-3. **Templates** — make `login.html` extend `base.html` so all pages share the same
-   header/footer. Fix the broken links in `index.html`. Finish the
-   `update_seller_profile.html` form (§10.10).
-4. **Forms** — add search / filter / pagination to `view_customers`.
-5. **Auth** — add password reset emails (fix the `EMAIL_BACKEND` setting first).
-6. **Profiles** — add login-required decorators (`@login_required`) to the profile
-   views so anonymous users can't access them. Add a logout view.
-7. **Testing** — write a test in `tests.py` that signs up a user and logs in.
-8. **Deployment** — set `DEBUG = False`, add `ALLOWED_HOSTS`, and serve with
-   Gunicorn behind Nginx. (Different topic.)
+### Files involved
+- `ecom_app/views_admin.py`
+- `templates/admin/` templates
+
+### Key concepts
+- Admin-only access
+- List views with iteration
+- Update and delete patterns
+
+### Step by step
+1. Create view_customers in views_admin.py:7-9 to list all customers
+2. Create update_customers in views_admin.py:11-20 to edit customer
+3. Create delete_customers in views_admin.py:22-25 to remove customer
+4. Create templates: admin_base.html, customers.html, update.html
+
+### Code references
+- `ecom_app/views_admin.py:7-9` - view_customers
+- `ecom_app/views_admin.py:11-20` - update_customers
+- `ecom_app/views_admin.py:22-25` - delete_customers
+- `templates/admin/customers.html:1-33` - customer list
+- `templates/admin/update.html:1-12` - update form
 
 ---
 
-## Quick restart checklist
+## Chapter 10: Templates & UI (Difficulty: Medium)
 
-Every time you come back to work:
+### What you will learn
+- Create base templates for each role
+- Use template inheritance
+- Render dynamic data
+- Use static files and Bootstrap
 
-```powershell
-Set-Location "C:\Users\Faizy\PycharmProjects\E_Commerce_RE"
-. .venv\Scripts\Activate.ps1
-python manage.py runserver
-```
+### Files involved
+- All files in `templates/` directory
 
-Then open <http://127.0.0.1:8000/>.
+### Key concepts
+- Template inheritance with {% extends %}
+- {% block %} for content injection
+- Django template language
+- Static files with {% load static %}
+- Bootstrap 5 styling
+
+### Step by step
+1. Create base templates for each role:
+   - `templates/index.html` - home page
+   - `templates/login.html` - login page
+   - `templates/admin/admin_base.html` - admin base
+   - `templates/seller/seller_base.html` - seller base
+   - `templates/buyer/product_base.html` - buyer base
+2. Create child templates extending base templates:
+   - `templates/buyer/product_card_list.html`
+   - `templates/buyer/open_product_page.html`
+   - `templates/buyer/cart_page.html`
+   - `templates/buyer/profile_view_buyer.html`
+   - `templates/buyer/checkout.html`
+   - `templates/seller/add_product.html`
+   - `templates/seller/product_view.html`
+   - `templates/seller/product_update.html`
+   - `templates/seller/profile_view_seller.html`
+   - `templates/admin/customers.html`
+   - `templates/admin/update.html`
+3. Create registration templates:
+   - `templates/user_add.html` (seller signup)
+   - `templates/customer_add.html` (buyer signup)
+
+### Code references
+- `templates/index.html:1-1046` - home page
+- `templates/login.html:1-277` - login page
+- `templates/admin/admin_base.html:1-641` - admin base
+- `templates/seller/seller_base.html:1-641` - seller base
+- `templates/buyer/product_base.html:1-110` - buyer base
+- `templates/buyer/product_card_list.html:1-75` - product grid
+- `templates/buyer/open_product_page.html:1-84` - product detail
+- `templates/buyer/cart_page.html:1-133` - cart page
+- `templates/buyer/profile_view_buyer.html:1-11` - buyer profile
+- `templates/buyer/checkout.html:1-8` - checkout page
+- `templates/seller/add_product.html:1-16` - add product form
+- `templates/seller/product_view.html:1-41` - product list
+- `templates/seller/product_update.html:1-12` - update form
+- `templates/seller/profile_view_seller.html:1-14` - seller profile
+- `templates/admin/customers.html:1-33` - customer list
+- `templates/admin/update.html:1-12` - update form
+- `templates/user_add.html:1-212` - seller signup
+- `templates/customer_add.html:1-212` - buyer signup
+
+---
+

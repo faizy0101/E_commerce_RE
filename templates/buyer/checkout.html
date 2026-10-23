@@ -3,6 +3,13 @@
 <div class="container py-5">
   <h2>Checkout</h2>
   <p>Thank you, {{ buyer_user.name }}. Your order total is ${{ total }}.</p>
-  <a href="{% url 'product_view_buyer' %}">Continue shopping</a>
+
+  <form method = "post">
+    {% csrf_token %}
+     {{form}}
+    <button type = 'submit' class="btn btn-primary">buy</button>
+  </form>
+
+<!--  <a href="#">Continue shopping</a>-->
 </div>
 {% endblock %}

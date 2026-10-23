@@ -44,7 +44,7 @@ class cart(models.Model):
 
 class order(models.Model):
     buyer=models.ForeignKey(buyer,on_delete=models.DO_NOTHING)
-    products_ordered=models.ForeignKey(product, on_delete=models.DO_NOTHING)
+    products_ordered=models.ManyToManyField(product)
     total_amount=models.PositiveIntegerField()
     #shipping
     name = models.CharField(max_length=100)

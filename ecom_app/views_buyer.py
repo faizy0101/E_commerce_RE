@@ -1,5 +1,7 @@
 from django.db.models import Model
 from django.shortcuts import render, redirect
+
+from ecom_app.forms import OrderForm
 from ecom_app.models import buyer, product, cart
 
 
@@ -65,16 +67,46 @@ def decrease_quantity(request,id):
     return redirect('Cart_view')
 
 
-def checkout(request,id):
-    cart_data=cart.objects.get(id=id)
-    print(cart_data)
-    #ordered_items=cart.objects.filter(buyer=buyer_user)
-    # total_price=0
-    # for p in ordered_items:
-    #     total_price+=((p.product.product_price) * (p.quantity))
+def checkout(request):
+    form = OrderForm()
+    user = request.user
+    customer_filter = buyer.objects.get(user=user)
+    ordered_items = cart.objects.filter(buyer=customer_filter)
+    total_price = 0
+    for p in ordered_items:
+        if p.quantity == 0:
+            p.delete()
+            continue
+        total_price += ((p.product.product_price) * (p.quantity))
+    #clear cart after checkout
+    # ordered_items.delete()
+
+    if request.method == "POST":
+        order_data = OrderForm(request.POST)
+        if order_data.is_valid():
+            print("ok1")
+            user_data=order_data.save(commit=False)
+            user_data.buyer=customer_filter
+            user_data.total_amount = total_price
+            print("ok2")
 
 
-    #return redirect('order_confirmation')
+            user_data.save()
+
+            user_data.save()
+
+            print("Order ID:", user_data.id)
+            print("Ordered items:", list(ordered_items))
+
+            products = [item.product for item in ordered_items]
+            print("Products to save:", products)
+
+            user_data.products_ordered.add(*products)
+
+            print("Saved products:", list(user_data.products_ordered.all()))
+
+
+    return render(request, 'buyer/checkout.html', {'form':form,'buyer_user': customer_filter, 'total': total_price})
 
 
 

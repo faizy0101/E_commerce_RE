@@ -28,7 +28,7 @@ urlpatterns=[
     path('Cart_view',views_buyer.Cart_view, name='Cart_view'),
     path('increase_quantity/<int:id>',views_buyer.increase_quantity, name='increase_quantity'),
     path('decrease_quantity/<int:id>',views_buyer.decrease_quantity, name='decrease_quantity'),
-    path('checkout/<int:id>',views_buyer.checkout, name='checkout'),
+    path('checkout/',views_buyer.checkout, name='checkout'),
 
 
 #     seller

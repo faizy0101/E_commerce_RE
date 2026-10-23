@@ -2,7 +2,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django import (forms)
 
-from ecom_app.models import Login, seller, buyer, product
+from ecom_app.models import Login, seller, buyer, product, order
 
 
 class loginform(UserCreationForm):
@@ -27,6 +27,13 @@ class productform(forms.ModelForm):
         model=product
         fields= '__all__'
         exclude=("seller",)
+
+
+class OrderForm(forms.ModelForm):
+    class Meta:
+        model=order
+        fields= '__all__'
+        exclude=('buyer','products_ordered','total_amount')
 
 
 
