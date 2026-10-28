@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 
 from ecom_app.forms import buyerform
-from ecom_app.models import buyer
+from ecom_app.models import buyer, OrderItem
 
 
 def view_customers(request):
@@ -24,3 +24,6 @@ def delete_customers(request,id):
     customers.delete()
     return redirect('view_customers')
 
+def all_orders_received(request):
+    all_orders=OrderItem.objects.all()
+    return render(request,'admin/all_orders_received.html',{'all_orders':all_orders})

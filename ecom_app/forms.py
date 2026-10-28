@@ -33,7 +33,7 @@ class OrderForm(forms.ModelForm):
     class Meta:
         model=order
         fields= '__all__'
-        exclude=('buyer','products_ordered','total_amount')
+        exclude=('buyer','total_amount')
 
 
 

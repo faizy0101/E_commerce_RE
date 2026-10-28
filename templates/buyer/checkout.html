@@ -1,13 +1,38 @@
 {% extends 'buyer/product_base.html' %}
 {% block content %}
+{%load crispy_forms_tags %}
 <div class="container py-5">
   <h2>Checkout</h2>
   <p>Thank you, {{ buyer_user.name }}. Your order total is ${{ total }}.</p>
 
+  {% if cart_items %}
+  <table class="table table-bordered mb-4">
+    <thead>
+      <tr>
+        <th>Product</th>
+        <th>Qty</th>
+        <th>Price</th>
+        <th>Subtotal</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in cart_items %}
+      <tr>
+        <td>{{ item.product.product_name }}</td>
+        <td>{{ item.quantity }}</td>
+        <td>${{ item.product.product_price }}</td>
+        <td>${{ item.subtotal }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
   <form method = "post">
     {% csrf_token %}
-     {{form}}
-    <button type = 'submit' class="btn btn-primary">buy</button>
+    {{ form|crispy }}
+    <br>
+    <button type = 'submit'  class="btn btn-primary">buy</button>
   </form>
 
 <!--  <a href="#">Continue shopping</a>-->

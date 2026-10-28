@@ -1,0 +1,31 @@
+
+{% extends 'seller/seller_base.html' %}
+{% block content %}
+<table class="table table-dark">
+  <thead>
+    <tr>
+      <th scope="col">No.</th>
+      <th scope="col">Name</th>
+      <th scope="col">Price</th>
+      <th scope="col">Quantity</th>
+      <th scope="col">Image</th>
+      <th scope="col">Customer</th>
+      <th scope="col" colspan="2">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for i in order_received_items %}
+    <tr>
+      <td>{{ forloop.counter }}</td>
+      <td>{{ i.product.product_name }}</td>
+      <td>{{ i.product.product_price }}</td>
+      <td>{{ i.quantity }}</td>
+      <td><img src="{{ i.product.product_image.url }}" style="height: 70px; width: 120px"></td>
+      <td>{{ i.order.buyer.name }}</td>
+      <td><a class="btn btn-info" type="button">Proceed to Shipping</a></td>
+      <td><a class="btn btn-danger" type="button" onclick="return confirm('Are you sure you want to delete the order ?');">Delete Order</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

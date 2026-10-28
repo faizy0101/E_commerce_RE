@@ -38,21 +38,28 @@ class product(models.Model):
     product_image = models.ImageField(upload_to='products', default='products/default.jpg')
 
 class cart(models.Model):
-    product=models.ForeignKey(product,on_delete=models.DO_NOTHING)
-    buyer=models.ForeignKey(buyer,on_delete=models.DO_NOTHING)
+    product=models.ForeignKey(product,on_delete=models.CASCADE)
+    buyer=models.ForeignKey(buyer,on_delete=models.CASCADE)
     quantity=models.PositiveIntegerField(default=1)
 
+    class Meta:
+        unique_together = ('buyer', 'product')
+
+
 class order(models.Model):
-    buyer=models.ForeignKey(buyer,on_delete=models.DO_NOTHING)
-    products_ordered=models.ManyToManyField(product)
-    total_amount=models.PositiveIntegerField()
-    #shipping
+    buyer = models.ForeignKey(buyer, on_delete=models.DO_NOTHING)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     name = models.CharField(max_length=100)
     email = models.EmailField()
     phone = models.CharField(max_length=100)
     address = models.CharField(max_length=100)
 
 
+class OrderItem(models.Model):
+    order = models.ForeignKey('order', on_delete=models.CASCADE)
+    product = models.ForeignKey(product, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
 
 
 

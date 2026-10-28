@@ -1,0 +1,8 @@
+
+{% extends 'buyer/product_base.html' %}
+{% block content %}
+<div class="text-center py-5">
+  <h3 class="mb-4">Your order has been placed</h3>
+  <a type="button" href="{% url 'product_view_buyer' %}" class="btn btn-primary">Continue Shipping</a>
+</div>
+{% endblock %}

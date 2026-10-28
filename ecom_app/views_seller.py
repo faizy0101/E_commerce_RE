@@ -2,7 +2,7 @@
 from django.http import request
 from django.shortcuts import render, redirect
 from ecom_app.forms import sellerform, productform
-from ecom_app.models import buyer, seller, product
+from ecom_app.models import buyer, seller, product, OrderItem
 
 
 def profile_view(request):
@@ -59,3 +59,9 @@ def product_delete(request, id):
     current_product=product.objects.get(id=id)
     current_product.delete()
     return redirect('product_view')
+
+def order_received(request):
+    user = request.user
+    seller_filter = seller.objects.get(user=user)
+    order_received_items = OrderItem.objects.filter(product__seller=seller_filter)
+    return render(request, 'seller/order_received.html', {'order_received_items':order_received_items})

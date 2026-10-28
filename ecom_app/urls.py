@@ -18,6 +18,7 @@ urlpatterns=[
     path('view_customers', views_admin.view_customers, name='view_customers'),
     path('update_customers/<int:id>',views_admin.update_customers, name='update_customers'),
     path('delete_customers/<int:id>', views_admin.delete_customers, name='delete_customers'),
+    path('all_orders',views_admin.all_orders_received, name='all_orders'),
 
 
 #     customer
@@ -29,6 +30,7 @@ urlpatterns=[
     path('increase_quantity/<int:id>',views_buyer.increase_quantity, name='increase_quantity'),
     path('decrease_quantity/<int:id>',views_buyer.decrease_quantity, name='decrease_quantity'),
     path('checkout/',views_buyer.checkout, name='checkout'),
+    path('order_placed',views_buyer.order_placed, name='order_placed'),
 
 
 #     seller
@@ -38,5 +40,5 @@ urlpatterns=[
     path('product_view',views_seller.product_view, name='product_view'),
     path('product_update/<int:id>',views_seller.product_update, name='product_update'),
     path('product_delete/<int:id>',views_seller.product_delete, name='product_delete'),
-
+    path('order_received',views_seller.order_received, name='order_received'),
 ]

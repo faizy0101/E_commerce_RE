@@ -1,8 +1,9 @@
-from django.db.models import Model
-from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.db.models import F
+from django.shortcuts import render, redirect, get_object_or_404
 
 from ecom_app.forms import OrderForm
-from ecom_app.models import buyer, product, cart
+from ecom_app.models import buyer, product, cart, OrderItem
 
 
 def profile_view(request):
@@ -32,18 +33,13 @@ def Cart(request,id):
     # data.save()
 
 def Cart_view(request):
-    user=request.user
-    customer_filter=buyer.objects.get(user=user)
-    products=cart.objects.filter(buyer=customer_filter)
-    total=0
-    for p in products:
-        if p.quantity == 0:
-           p.delete()
-        else:
-            total+=((p.product.product_price)*(p.quantity))
+    user = request.user
+    customer_filter = get_object_or_404(buyer, user=user)
+    cart.objects.filter(buyer=customer_filter, quantity=0).delete()
+    products = cart.objects.filter(buyer=customer_filter).select_related('product')
+    total = sum((p.product.product_price * p.quantity) for p in products)
 
-
-    return render(request, 'buyer/cart_page.html', {'products':products, 'total':total})
+    return render(request, 'buyer/cart_page.html', {'products': products, 'total': total})
 
 def product_delete_from_cart(request, id):
     current_product=cart.objects.get(id=id)
@@ -67,47 +63,56 @@ def decrease_quantity(request,id):
     return redirect('Cart_view')
 
 
+
 def checkout(request):
-    form = OrderForm()
     user = request.user
-    customer_filter = buyer.objects.get(user=user)
-    ordered_items = cart.objects.filter(buyer=customer_filter)
-    total_price = 0
-    for p in ordered_items:
-        if p.quantity == 0:
-            p.delete()
-            continue
-        total_price += ((p.product.product_price) * (p.quantity))
-    #clear cart after checkout
-    # ordered_items.delete()
+    customer_filter = get_object_or_404(buyer, user=user)
+    ordered_items = cart.objects.filter(buyer=customer_filter).select_related('product')
+
+    if not ordered_items.exists():
+        return redirect('Cart_view')
+
+    total_price = sum((item.product.product_price * item.quantity) for item in ordered_items)
+
+
+    for item in ordered_items:
+        item.subtotal = item.product.product_price * item.quantity
 
     if request.method == "POST":
+
         order_data = OrderForm(request.POST)
         if order_data.is_valid():
-            print("ok1")
-            user_data=order_data.save(commit=False)
-            user_data.buyer=customer_filter
-            user_data.total_amount = total_price
-            print("ok2")
+            new_order = order_data.save(commit=False)
+            new_order.buyer = customer_filter
+            new_order.total_amount = total_price
+            new_order.save()
 
+            for item in ordered_items:
 
-            user_data.save()
+                OrderItem.objects.create(
+                    order=new_order,
+                    product=item.product,
+                    quantity=item.quantity,
+                    price=item.product.product_price,
+                )
+                item.product.product_quantity = F('product_quantity') - item.quantity
+                item.product.save()
 
-            user_data.save()
+            ordered_items.delete()
 
-            print("Order ID:", user_data.id)
-            print("Ordered items:", list(ordered_items))
+            return redirect('order_placed')
+    else:
+        order_data = OrderForm()
 
-            products = [item.product for item in ordered_items]
-            print("Products to save:", products)
+    return render(request, 'buyer/checkout.html', {
+        'form': order_data,
+        'buyer_user': customer_filter,
+        'total': total_price,
+        'cart_items': ordered_items,
+    })
 
-            user_data.products_ordered.add(*products)
-
-            print("Saved products:", list(user_data.products_ordered.all()))
-
-
-    return render(request, 'buyer/checkout.html', {'form':form,'buyer_user': customer_filter, 'total': total_price})
-
+def order_placed(request):
+    return render(request, 'buyer/order_placed.html')
 
 
 
